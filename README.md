@@ -1,2 +1,2 @@
 # LongAndShort
-An open source project to simplify trading stragegy process for retail investor
+An (soon to be) open source project to simplify trading strategy process for retail investor
