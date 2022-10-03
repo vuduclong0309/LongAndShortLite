@@ -76,7 +76,7 @@ class Bot:
     def __init__(self):
         #Connect to IB on init
         self.ib = IBApi()
-        self.ib.connect("127.0.0.1", 7496,1)
+        self.ib.connect("127.0.0.1", 7497,1)
         ib_thread = threading.Thread(target=self.run_loop, daemon=True)
         ib_thread.start()
         time.sleep(1)
