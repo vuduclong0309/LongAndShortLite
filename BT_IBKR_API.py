@@ -73,7 +73,7 @@ class St(bt.Strategy):
 
 def run(args=None):
     cerebro = bt.Cerebro(stdstats=False)
-    store = bt.stores.IBStore(port=7496)
+    store = bt.stores.IBStore(port=7497)
 
     data = store.getdata(dataname='TWTR', timeframe=bt.TimeFrame.Ticks)
     cerebro.resampledata(data, timeframe=bt.TimeFrame.Seconds, compression=10)

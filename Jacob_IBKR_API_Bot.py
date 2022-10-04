@@ -99,6 +99,7 @@ class Bot:
         # Request Market Data
         #self.ib.reqRealTimeBars(0, contract, 5, "TRADES", 1, [])
         self.ib.reqHistoricalData(self.reqId,contract,"","2 D",str(self.barsize)+mintext,"TRADES",1,1,True,[])
+        print("ok")
     #Listen to socket in seperate thread
     def run_loop(self):
         self.ib.run()
@@ -141,6 +142,7 @@ class Bot:
         return bracketOrders
     #Pass realtime bar data back to our bot object
     def on_bar_update(self, reqId, bar,realtime):
+        print(bar)
         global orderId
         #Historical Data to catch up
         if (realtime == False):
