@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\bot"
   ],
-  "SelectedNode": "\\LICENSE",
+  "SelectedNode": "\\ibtest_default.py",
   "PreviewInSolutionExplorer": false
 }
