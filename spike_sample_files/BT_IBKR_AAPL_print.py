@@ -21,10 +21,17 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import datetime
+
 import backtrader as bt
+import backtrader.indicators as btind
+import backtrader.feeds as btfeeds
 
 
 class St(bt.Strategy):
+    def __init__(self):
+        self.sma = btind.SimpleMovingAverage(period=15)
+
     def logdata(self):
         txt = []
         txt.append('{}'.format(len(self)))
@@ -43,7 +50,6 @@ class St(bt.Strategy):
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
-        print(data)
         if status == data.LIVE:
             self.data_live = True
 
@@ -72,15 +78,22 @@ class St(bt.Strategy):
 
 
 def run(args=None):
+
     cerebro = bt.Cerebro(stdstats=False)
-    store = bt.stores.IBStore(port=7497)
-
-    data = store.getdata(dataname='TWTR', timeframe=bt.TimeFrame.Ticks)
-    cerebro.resampledata(data, timeframe=bt.TimeFrame.Seconds, compression=10)
-
-    cerebro.broker = store.getbroker()
-
     cerebro.addstrategy(St)
+    store = bt.stores.IBStore(port=7497)
+    stockkwargs = dict(
+        timeframe=bt.TimeFrame.Minutes,
+        rtbar=False,  # use RealTime 5 seconds bars
+        historical=True,  # only historical download
+        qcheck=0.5,  # timeout in seconds (float) to check for events
+        #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
+        #todate=datetime.datetime(2022, 9, 25),  # get data from..
+        latethrough=False,  # let late samples through
+        tradename=None  # use a different asset as order target
+    )
+    data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
     cerebro.run()
 
 

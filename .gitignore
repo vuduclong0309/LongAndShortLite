@@ -128,4 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.vs
+# Visual studio stuff
+.vs/
+.sln
+.pyproj
