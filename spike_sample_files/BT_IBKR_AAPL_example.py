@@ -5,8 +5,6 @@ import backtrader.feeds as btfeeds
 
 
 class PrintClose(bt.Strategy):
-    def __init__(self):
-        self.sma = btind.SimpleMovingAverage(period=15)
 
     def start(self):
         print("ok")
@@ -32,10 +30,11 @@ class PrintClose(bt.Strategy):
 def run(args=None):
     cerebro = bt.Cerebro()
     ibstore = bt.stores.IBStore(host='127.0.0.1', port=7497)
-    data = ibstore.getdata(dataname='EUR.USD-CASH-IDEALPRO',
-                       timeframe=bt.TimeFrame.Seconds, compression=5)
+    data = ibstore.getdata(dataname='AAPL-STK-SMART-USD',
+                       timeframe=bt.TimeFrame.Seconds, compression=5, historical="True")
 
-    cerebro.replaydata(data, timeframe=bt.TimeFrame.Minutes, compression=2)
+    ##cerebro.replaydata(data, timeframe=bt.TimeFrame.Minutes, compression=2)
+    cerebro.resampledata(data, timeframe=bt.TimeFrame.Minutes, compression=1)
 
     #cerebro.adddata(data) #not sure if this is needed, but commenting it out does not fix the problem
 
