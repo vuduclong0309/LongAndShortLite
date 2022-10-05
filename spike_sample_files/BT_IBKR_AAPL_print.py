@@ -64,7 +64,6 @@ class St(bt.Strategy):
     sold = 0
 
     def next(self):
-        print("ok")
         self.logdata()
         if not self.data_live:
             return
