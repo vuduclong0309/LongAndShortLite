@@ -52,17 +52,9 @@ def run():
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
-    #data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
-    #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
+    data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
 
-    data = store.getdata(dataname='GBP.USD',
-                         sectype='CASH',
-                         exchange='IDEALPRO',
-                         fromdate=datetime.datetime(2022, 9, 11),
-                         todate=datetime.datetime(2022, 9, 12),
-                         timeframe=bt.TimeFrame.Days,
-                         compression=5)
-    cerebro.adddata(data)
 
     #data = store.getdata(dataname='TWTR', timeframe=bt.TimeFrame.Ticks)
     #cerebro.resampledata(data, timeframe=bt.TimeFrame.Seconds, compression=10)
