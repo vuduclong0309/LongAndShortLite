@@ -6,7 +6,7 @@ class MAstrategy(bt.Strategy):
 	def __init__(self):
 		self.ma = bt.indicators.SimpleMovingAverage(self.data.close, period=100)
 		self.order = None
- 
+
 	def next(self):
 		if self.order:
 			return
@@ -22,12 +22,12 @@ class MAstrategy(bt.Strategy):
 			if len(self) >= (self.bar_executed + 4):
 				self.log('Position Closed, %.2f' % self.data.close[0])
 				self.order = self.close()
- 
+
 	# outputting information
 	def log(self, txt):
 		dt=self.datas[0].datetime.date(0)
 		print('%s, %s' % (dt.isoformat(), txt))
-   
+
 	def notify_order(self, order):
 		if order.status == order.Completed:
 			if order.isbuy():
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 	cerebro.broker.setcommission(commission=0.001)
 	data = bt.feeds.PandasData(dataname=yf.download("AAPL", "2016-6-25", "2021-6-25"))
 	cerebro.adddata(data)
-   
+
 	print('<START> Brokerage account: $%.2f' % cerebro.broker.getvalue())
 	cerebro.run()
 	print('<FINISH> Brokerage account: $%.2f' % cerebro.broker.getvalue())

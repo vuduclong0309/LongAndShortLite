@@ -55,32 +55,31 @@ class SmaCross(bt.Strategy):
         print(self.position)
         self.crossover
 
-        if not self.position:  # not in the market
+        if not self.position:  # not in the market            
             if self.crossover > 0:  # if fast crosses slow to the upside
                 self.buy()  # enter long
 
         elif self.crossover < 0:  # in the market & cross to the downside
             self.close()  # close long position
 
+
 cerebro = bt.Cerebro(stdstats=False)
 store = bt.stores.IBStore(port=7497)
 stockkwargs = dict(
     timeframe=bt.TimeFrame.Minutes,
-    rtbar=False,  # use RealTime 5 seconds bars
-    historical=True,  # only historical download
+    rtbar=True,  # use RealTime 5 seconds bars
+    historical=False,  # only historical download
     qcheck=0.5,  # timeout in seconds (float) to check for events
     #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
     #todate=datetime.datetime(2022, 9, 25),  # get data from..
     latethrough=False,  # let late samples through
     tradename=None  # use a different asset as order target
 )
-data0 = store.getdata(dataname="EUR.USD-CASH-IDEALPRO", **stockkwargs)
+data0 = store.getdata(dataname="GME-STK-SMART-USD", **stockkwargs)
 cerebro.resampledata(data0, timeframe=bt.TimeFrame.Seconds, compression=5)
 
 cerebro.broker = store.getbroker()
 
 cerebro.addstrategy(SmaCross)
-print(cerebro.broker.value)
 cerebro.run()
-print(cerebro.broker.value)
-#cerebro.plot(style='candlestick',loc='grey', grid=False) #You can leave inside the paranthesis empty
+cerebro.plot()
