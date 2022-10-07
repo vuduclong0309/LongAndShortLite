@@ -30,7 +30,7 @@ class PrintClose(bt.Strategy):
 def run(args=None):
     cerebro = bt.Cerebro()
     ibstore = bt.stores.IBStore(host='127.0.0.1', port=7497)
-    data = ibstore.getdata(dataname='AAPL-STK-SMART-USD',
+    data = ibstore.getdata(dataname='SPY-STK-SMART-USD',
                        timeframe=bt.TimeFrame.Seconds, compression=5, historical="True")
 
     ##cerebro.replaydata(data, timeframe=bt.TimeFrame.Minutes, compression=2)

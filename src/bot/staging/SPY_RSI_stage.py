@@ -88,30 +88,34 @@ class StochRSI(bt.Strategy):
 
 def run(args=None):
 
-    cerebro = bt.Cerebro(stdstats=False)
+    cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
-        rtbar=True,  # use RealTime 5 seconds bars
-        historical=False,  # only historical download
+        rtbar=False,  # use RealTime 5 seconds bars
+        historical=True,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
-    data0 = store.getdata(dataname="SPY-STK-SMART-USD", **stockkwargs)
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
-    #stval = cerebro.broker.getvalue()
+    data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=15)
+    stval = cerebro.broker.getvalue()
 
-    cerebro.broker = store.getbroker()
+    #cerebro.broker = store.getbroker()
+    stval = cerebro.broker.getvalue()
 
     cerebro.addstrategy(StochRSI)
     cerebro.run()
     cerebro.plot()
-    #endval = cerebro.broker.getvalue()
-    #print(stval)
-    #print(endval)
+    
+    endval = cerebro.broker.getvalue()
+    
+    print(stval)
+    print(endval)
+    cerebro.plot()
 
 
 if __name__ == '__main__':
