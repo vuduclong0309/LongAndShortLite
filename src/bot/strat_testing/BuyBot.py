@@ -21,17 +21,10 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import datetime
-
 import backtrader as bt
-import backtrader.indicators as btind
-import backtrader.feeds as btfeeds
 
 
 class St(bt.Strategy):
-    def __init__(self):
-        self.sma = btind.SimpleMovingAverage(period=15)
-
     def logdata(self):
         txt = []
         txt.append('{}'.format(len(self)))
@@ -43,10 +36,7 @@ class St(bt.Strategy):
         txt.append('{:.2f}'.format(self.data.volume[0]))
         print(','.join(txt))
 
-    data_live = True
-
-    def notify_store(self, msg, *args, **kwargs):
-        print('STORE NOTIF:{}', msg)
+    data_live = False
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
@@ -59,6 +49,9 @@ class St(bt.Strategy):
             txt = '{} {}@{}'.format(buysell, order.executed.size,
                                     order.executed.price)
             print(txt)
+
+    def notify_store(self, msg, *args, **kwargs):
+        print('STORE NOTIF:{}', msg)
 
     bought = 0
     sold = 0
@@ -79,12 +72,11 @@ class St(bt.Strategy):
 def run(args=None):
 
     cerebro = bt.Cerebro(stdstats=False)
-    cerebro.addstrategy(St)
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
-        rtbar=False,  # use RealTime 5 seconds bars
-        historical=True,  # only historical download
+        rtbar=True,  # use RealTime 5 seconds bars
+        historical=False,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
@@ -93,8 +85,11 @@ def run(args=None):
     )
     data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
     cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
+
+    cerebro.broker = store.getbroker()
+
+    cerebro.addstrategy(St)
     cerebro.run()
-    cerebro.plot()
 
 
 if __name__ == '__main__':

@@ -28,9 +28,12 @@ import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
 
-class St(bt.Strategy):
-    def __init__(self):
-        self.sma = btind.SimpleMovingAverage(period=15)
+class SmaCross(bt.Strategy):
+    # list of parameters which are configurable for the strategy
+    params = dict(
+        pfast=10,  # period for the fast moving average
+        pslow=30   # period for the slow moving average
+    )
 
     def logdata(self):
         txt = []
@@ -43,43 +46,30 @@ class St(bt.Strategy):
         txt.append('{:.2f}'.format(self.data.volume[0]))
         print(','.join(txt))
 
-    data_live = True
+    def __init__(self):
+        sma1 = bt.ind.SMA(period=self.p.pfast)  # fast moving average
+        sma2 = bt.ind.SMA(period=self.p.pslow)  # slow moving average
+        self.crossover = bt.ind.CrossOver(sma1, sma2)  # crossover signal
 
-    def notify_store(self, msg, *args, **kwargs):
-        print('STORE NOTIF:{}', msg)
+    def next(self):
+        self.logdata()
+
+        if not self.position:  # not in the market
+            if self.crossover > 0:  # if fast crosses slow to the upside
+                self.buy()  # enter long
+
+        elif self.crossover < 0:  # in the market & cross to the downside
+            self.close()  # close long position
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
         if status == data.LIVE:
             self.data_live = True
 
-    def notify_order(self, order):
-        if order.status == order.Completed:
-            buysell = 'BUY ' if order.isbuy() else 'SELL'
-            txt = '{} {}@{}'.format(buysell, order.executed.size,
-                                    order.executed.price)
-            print(txt)
-
-    bought = 0
-    sold = 0
-
-    def next(self):
-        self.logdata()
-        if not self.data_live:
-            return
-
-        if not self.bought:
-            self.bought = len(self)  # keep entry bar
-            self.buy()
-        elif not self.sold:
-            if len(self) == (self.bought + 3):
-                self.sell()
-
-
 def run(args=None):
 
     cerebro = bt.Cerebro(stdstats=False)
-    cerebro.addstrategy(St)
+    cerebro.addstrategy(SmaCross)
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
@@ -93,8 +83,11 @@ def run(args=None):
     )
     data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
     cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
+    stval = cerebro.broker.getvalue()
     cerebro.run()
-    cerebro.plot()
+    endval = cerebro.broker.getvalue()
+    print(stval)
+    print(endval)
 
 
 if __name__ == '__main__':
