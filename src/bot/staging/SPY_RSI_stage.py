@@ -57,14 +57,14 @@ class StochRSI(bt.Strategy):
             return
         
         #if not self.position: # check if you already have a position in the market
-        if (self.rsi < 30 and self.position.size < 10):
+        if (self.rsi < 30 and self.position.size < 100):
             self.log('Buy Create, %.2f' % self.data.close[0])
-            self.buy(size=1) # buy when closing price today crosses above MA.
+            self.buy(size=10) # buy when closing price today crosses above MA.
         else:
             # This means you are in a position, and hence you need to define exit strategy here.
-            if (self.rsi > 70 and self.position.size > -10):
+            if (self.rsi > 70 and self.position.size > -100):
                 self.log('Position Closed, %.2f' % self.data.close[0])
-                self.sell(size=1)
+                self.sell(size=10)
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
@@ -88,30 +88,34 @@ class StochRSI(bt.Strategy):
 
 def run(args=None):
 
-    cerebro = bt.Cerebro(stdstats=False)
+    cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
-        rtbar=True,  # use RealTime 5 seconds bars
-        historical=False,  # only historical download
+        rtbar=False,  # use RealTime 5 seconds bars
+        historical=True,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
-    data0 = store.getdata(dataname="SPY-STK-SMART-USD", **stockkwargs)
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
-    #stval = cerebro.broker.getvalue()
+    data0 = store.getdata(dataname="UPRO-STK-SMART-USD", **stockkwargs)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=3)
+    stval = cerebro.broker.getvalue()
 
-    cerebro.broker = store.getbroker()
+    #cerebro.broker = store.getbroker()
+    stval = cerebro.broker.getvalue()
 
     cerebro.addstrategy(StochRSI)
     cerebro.run()
     cerebro.plot()
-    #endval = cerebro.broker.getvalue()
-    #print(stval)
-    #print(endval)
+    
+    endval = cerebro.broker.getvalue()
+    
+    print(stval)
+    print(endval)
+    cerebro.plot()
 
 
 if __name__ == '__main__':

@@ -85,11 +85,8 @@ class MACDStopLoss(bt.Strategy):
                                        period_me2=self.p.macd2,
                                        period_signal=self.p.macdsig)
 
-        self.ema9 = bt.indicators.EMA(period = 9)
-        self.ema12 = bt.indicators.EMA(period = 12)
-        self.ema26 = bt.indicators.EMA(period = 26)
 
-        self.l.macdmin = self.ema12 - self.ema26
+        self.l.macdmin = bt.indicators.EMA(period = 12) - bt.indicators.EMA(period = 26)
 
         # Cross of macd.macd and macd.signal
         self.mcross = bt.indicators.CrossOver(self.macd.macd, self.macd.signal)
@@ -104,14 +101,18 @@ class MACDStopLoss(bt.Strategy):
     def start(self):
         self.order = None  # sentinel to avoid operrations on pending order
 
+    lastmacd = -10
     def next(self):
-        print(self.macdmin[0])
+        #print(str(self.macdmin[0]) + " " + str(self.lastmacd))
+        if(self.lastmacd == -10):
+            self.lastmacd = self.macdmin[0]
+
         if self.order:
             return  # pending order execution
 
         if not self.position:  # not in the market
             if self.mcross[0] > 0.0 and self.smadir < 0.0:
-                self.order = self.buy()
+                self.order = self.buy(size=10)
                 self.log('Buy Create, %.2f' % self.data.close[0])
                 pdist = self.atr[0] * self.p.atrdist
                 self.pstop = self.data.close[0] - pdist
@@ -120,20 +121,21 @@ class MACDStopLoss(bt.Strategy):
             pclose = self.data.close[0]
             pstop = self.pstop
 
-            if pclose < pstop:
+            if abs(self.lastmacd) > abs(self.macdmin[0]) or pclose < pstop:
                 self.close()  # stop met - get out
                 self.log('Position Closed, %.2f' % self.data.close[0])
             else:
                 pdist = self.atr[0] * self.p.atrdist
                 # Update only if greater than
                 self.pstop = max(pstop, pclose - pdist)
+        self.lastmacd = self.macdmin[0]
 
 
 
 
 def run(args=None):
 
-    cerebro = bt.Cerebro(stdstats=False)
+    cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
@@ -152,7 +154,7 @@ def run(args=None):
 
     cerebro.addstrategy(MACDStopLoss)
     cerebro.run()
-    cerebro.plot()
+    cerebro.plot(style='candlestick',loc='grey', grid=False) #You can leave inside the paranthesis empty
     endval = cerebro.broker.getvalue()
     print(stval)
     print(endval)
