@@ -100,8 +100,10 @@ def run(args=None):
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
-    data0 = store.getdata(dataname="UPRO-STK-SMART-USD", **stockkwargs)
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=3)
+
+    data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=15)
+
     stval = cerebro.broker.getvalue()
 
     #cerebro.broker = store.getbroker()

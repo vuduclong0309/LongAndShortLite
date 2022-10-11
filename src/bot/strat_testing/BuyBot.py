@@ -57,18 +57,16 @@ class St(bt.Strategy):
     sold = 0
 
     def next(self):
-        print("ok")
         self.logdata()
         if not self.data_live:
             return
 
-        print(self.datas)
-
-        #if not self.bought:
-        #    self.buy(data="d1",size=1) # buy when closing price today crosses above MA.
-        #elif not self.sold:
-        #    if len(self) == (self.bought + 3):
-        #        self.sell()
+        if not self.bought:
+            self.bought = len(self)  # keep entry bar
+            self.buy()
+        elif not self.sold:
+            if len(self) == (self.bought + 3):
+                self.sell()
 
 
 def run(args=None):
