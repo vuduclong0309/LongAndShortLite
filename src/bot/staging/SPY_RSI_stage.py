@@ -57,14 +57,14 @@ class StochRSI(bt.Strategy):
             return
         
         #if not self.position: # check if you already have a position in the market
-        if (self.rsi < 30 and self.position.size < 10):
+        if (self.rsi < 30 and self.position.size < 100):
             self.log('Buy Create, %.2f' % self.data.close[0])
-            self.buy(size=1) # buy when closing price today crosses above MA.
+            self.buy(size=10) # buy when closing price today crosses above MA.
         else:
             # This means you are in a position, and hence you need to define exit strategy here.
-            if (self.rsi > 70 and self.position.size > -10):
+            if (self.rsi > 70 and self.position.size > -100):
                 self.log('Position Closed, %.2f' % self.data.close[0])
-                self.sell(size=1)
+                self.sell(size=10)
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
@@ -100,8 +100,10 @@ def run(args=None):
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
+
     data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
     cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=15)
+
     stval = cerebro.broker.getvalue()
 
     #cerebro.broker = store.getbroker()
