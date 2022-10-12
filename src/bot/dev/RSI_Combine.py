@@ -43,10 +43,14 @@ def getTradingRange(symbol):
 
 expdate, strike_glob = getTradingRange(symbol_glob)
 
-class StochRSI(bt.Strategy):
+put = 'p%s' % str(strike_glob)
+call = 'c%s' % str(strike_glob)
+
+class RSIPut(bt.Strategy):
     def __init__(self):
         self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
         self.order = None
+        self.last_rsi = self.rsi + 0.0
 
     # outputting information
     def log(self, txt):
@@ -68,7 +72,6 @@ class StochRSI(bt.Strategy):
 
     def next(self):
         self.logdata()
-        self.strike = str(strike_glob)
 
         if backtest_glob == False: 
             if self.data_live == False:
@@ -76,16 +79,99 @@ class StochRSI(bt.Strategy):
         if self.order:
             return        
 
-        print("rsi %s last close %s price %s" % (str(self.rsi + 0.01), self.datas[1].close[0], self.getpositionbyname(self.strike).price))
+        print("rsi %s put %s price %s" % (str(self.rsi + 0.01), self.getdatabyname(put).close[0], self.getpositionbyname(put).price))
 
-        if self.getpositionbyname(self.strike).size <= 0:
-            if self.rsi > 70:
-                self.order = self.buy(data=self.strike, size=1, trailpercent = 20) # buy when closing price today crosses above MA.
+        if self.getpositionbyname(put).size <= 0:
+            if self.rsi > 70 and self.last_rsi > 70:
+                print("Put Order")
+                self.order = self.buy(data=put, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
             if self.rsi < 30 \
-                or self.getpositionbyname(self.strike).price / 100 * 0.9 > self.datas[1].close[0] \
-                or self.getpositionbyname(self.strike).price / 100 * 1.2 < self.datas[1].close[0]:
-                self.order = self.close(data=self.strike)
+                or self.getpositionbyname(put).price / 100 * 0.9 > self.getdatabyname(put).close[0] \
+                or self.getpositionbyname(put).price / 100 * 1.2 < self.getdatabyname(put).close[0]:
+                print("Put Order")
+                self.order = self.close(data=put)
+        self.last_rsi = self.rsi + 0.0
+
+    def notify_data(self, data, status, *args, **kwargs):
+        print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
+        if status == data.LIVE:
+            self.data_live = True
+
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            # Buy/Sell order submitted/accepted to/by broker - Nothing to do
+            return
+
+        # Check if an order has been completed
+        # Attention: broker could reject order if not enough cash
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                self.log(
+                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                    (order.executed.price,
+                     order.executed.value,
+                     order.executed.comm))
+
+                self.buyprice = order.executed.price
+                self.buycomm = order.executed.comm
+            else:  # Sell
+                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                         (order.executed.price,
+                          order.executed.value,
+                          order.executed.comm))
+
+            self.bar_executed = len(self)
+
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log('Order Canceled/Margin/Rejected')
+
+        self.order = None
+
+class RSICall(bt.Strategy):
+    def __init__(self):
+        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
+        self.order = None
+        self.last_rsi = self.rsi + 0.0
+
+    # outputting information
+    def log(self, txt):
+        dt=self.datas[0].datetime.date(0)
+        print('%s, %s' % (dt.isoformat(), txt))
+
+    def logdata(self):
+        txt = []
+        txt.append('{}'.format(len(self)))
+        txt.append('{}'.format(self.data.datetime.datetime(0).isoformat()))
+        txt.append('{:.2f}'.format(self.data.open[0]))
+        txt.append('{:.2f}'.format(self.data.high[0]))
+        txt.append('{:.2f}'.format(self.data.low[0]))
+        txt.append('{:.2f}'.format(self.data.close[0]))
+        txt.append('{:.2f}'.format(self.data.volume[0]))
+        print(','.join(txt))
+
+    data_live = False
+
+    def next(self):
+        if backtest_glob == False: 
+            if self.data_live == False:
+                return
+        if self.order:
+            return        
+
+        print("rsi %s %s call %s price %s" % (str(self.rsi + 0.01), self.last_rsi, self.getdatabyname(call).close[0], self.getpositionbyname(call).price))
+
+        if self.getpositionbyname(call).size <= 0:
+            if self.rsi < 30 and self.last_rsi < 30:
+                print("Call Order")
+                self.order = self.buy(data=call, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
+        else:
+            if self.rsi > 70 \
+                or self.getpositionbyname(call).price / 100 * 0.9 > self.getdatabyname(call).close[0] \
+                or self.getpositionbyname(call).price / 100 * 1.2 < self.getdatabyname(call).close[0]:
+                print("Call Order")
+                self.order = self.close(data=call)
+        self.last_rsi = self.rsi + 0.0
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
@@ -134,15 +220,21 @@ def run(args=None):
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
         tradename=None,  # use a different asset as order target
-        compression=3
+        compression=1
     )
     
 
     data0 = store.getdata(dataname="%s-STK-SMART-USD" % symbol_glob, **stockkwargs)
-    cerebro.adddata(data0, name='stock')
+    datap = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
+    datac = store.getdata(dataname="%s-%s-SMART-USD-%s-CALL" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
+    
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
+    cerebro.resampledata(datap, timeframe=bt.TimeFrame.Minutes, compression=1)
+    cerebro.resampledata(datac, timeframe=bt.TimeFrame.Minutes, compression=1)
 
-    data = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
-    cerebro.adddata(data, name='%s' % str(strike_glob))
+    cerebro.adddata(data0, name='stock')
+    cerebro.adddata(datap, name=put)
+    cerebro.adddata(datac, name=call)
     
     cerebro.broker.setcash(100)
     stval = cerebro.broker.getvalue()
@@ -150,7 +242,8 @@ def run(args=None):
     if backtest_glob == False:
         cerebro.broker = store.getbroker()
 
-    cerebro.addstrategy(StochRSI)
+    cerebro.addstrategy(RSIPut)
+    cerebro.addstrategy(RSICall)
     cerebro.run()
 
     endval = cerebro.broker.getvalue()
