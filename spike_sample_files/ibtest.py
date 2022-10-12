@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; py-indent-offset:4 -*-
+# python ibtest.py --port 7497 --qcheck 2 --reconnect 3 --data0 EUR.USD-CASH-IDEALPRO --timeframe Seconds --compression 10
 ###############################################################################
 #
 # Copyright (C) 2015-2020 Daniel Rodriguez
