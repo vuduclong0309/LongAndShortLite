@@ -94,7 +94,7 @@ class RSIPut(bt.Strategy):
             elif self.getpositionbyname(put).price * 0.9 > self.getdatabyname(put).close[0]:
                 print("Close Put on Stop Loss")
                 self.order = self.close(data=put)
-            elif self.getpositionbyname(put).price * 1.2 < self.getdatabyname(put).close[0]:
+            elif self.getpositionbyname(put).price * 1.15 < self.getdatabyname(put).close[0] and self.rsi > self.last_rsi:
                 print("Close Put on Target")
                 self.order = self.close(data=put)
                 
@@ -181,7 +181,7 @@ class RSICall(bt.Strategy):
             elif self.getpositionbyname(call).price * 0.9 > self.getdatabyname(call).close[0]:
                 print("Close Call on Stop Loss")
                 self.order = self.close(data=call)
-            elif self.getpositionbyname(call).price * 1.2 < self.getdatabyname(call).close[0]:
+            elif self.getpositionbyname(call).price * 1.15 < self.getdatabyname(call).close[0] and self.rsi < self.last_rsi:
                 print("Close Call on Big Profit")
                 self.order = self.close(data=call)
         self.last_rsi = self.rsi + 0.0
