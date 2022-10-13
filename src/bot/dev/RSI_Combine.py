@@ -34,7 +34,7 @@ symbol_glob = "SPY"
 
 def getTradingRange(symbol):
     stock = yf.Ticker(symbol)
-    latest_price = stock.history(period='0d')['Open'][0]
+    latest_price = stock.history(period='0d', interval='1m')['Close'][-1]
     basetime = stock.options[2].replace('-', '') # get 3-5dte date
 
     # Completely optional but I recommend having some sort of round(er?).
@@ -73,24 +73,32 @@ class RSIPut(bt.Strategy):
     def next(self):
         self.logdata()
 
-        if backtest_glob == False: 
+        if backtest_glob == False:
             if self.data_live == False:
                 return
-        if self.order:
-            return        
 
-        print("rsi %s put %s price %s" % (str(self.rsi + 0.01), self.getdatabyname(put).close[0], self.getpositionbyname(put).price))
+        print("rsi %s put %s price %s" % (str(self.rsi + 0.0), self.getdatabyname(put).close[0], self.getpositionbyname(put).price))
+
+        #if self.order:
+        #    print("pending order, returning")
+        #    return
 
         if self.getpositionbyname(put).size <= 0:
-            if self.rsi > 70 and self.last_rsi > 70:
-                print("Put Order")
+            if self.rsi > 70 and self.rsi < self.last_rsi:
+                print("Buy Put")
                 self.order = self.buy(data=put, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
-            if self.rsi < 30 \
-                or self.getpositionbyname(put).price / 100 * 0.9 > self.getdatabyname(put).close[0] \
-                or self.getpositionbyname(put).price / 100 * 1.2 < self.getdatabyname(put).close[0]:
-                print("Put Order")
+            if ((self.rsi < 30 or self.last_rsi < 30) and self.rsi > self.last_rsi):
+                print("Close Put on RSI")
                 self.order = self.close(data=put)
+            elif self.getpositionbyname(put).price * 0.9 > self.getdatabyname(put).close[0]:
+                print("Close Put on Stop Loss")
+                self.order = self.close(data=put)
+            elif self.getpositionbyname(put).price * 1.2 < self.getdatabyname(put).close[0]:
+                print("Close Put on Target")
+                self.order = self.close(data=put)
+                
+                
         self.last_rsi = self.rsi + 0.0
 
     def notify_data(self, data, status, *args, **kwargs):
@@ -153,23 +161,28 @@ class RSICall(bt.Strategy):
     data_live = False
 
     def next(self):
-        if backtest_glob == False: 
+        if backtest_glob == False:
             if self.data_live == False:
                 return
-        if self.order:
-            return        
+        #if self.order:
+        #    print("call order pending, returning")
+        #    return
 
         print("rsi %s %s call %s price %s" % (str(self.rsi + 0.01), self.last_rsi, self.getdatabyname(call).close[0], self.getpositionbyname(call).price))
 
         if self.getpositionbyname(call).size <= 0:
-            if self.rsi < 30 and self.last_rsi < 30:
-                print("Call Order")
+            if self.rsi < 30 and self.rsi > self.last_rsi:
+                print("Buy Call")
                 self.order = self.buy(data=call, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
-            if self.rsi > 70 \
-                or self.getpositionbyname(call).price / 100 * 0.9 > self.getdatabyname(call).close[0] \
-                or self.getpositionbyname(call).price / 100 * 1.2 < self.getdatabyname(call).close[0]:
-                print("Call Order")
+            if ((self.rsi > 70 or self.last_rsi > 70) and self.rsi < self.last_rsi):
+                print("Close Call on RSI")
+                self.order = self.close(data=call)
+            elif self.getpositionbyname(call).price * 0.9 > self.getdatabyname(call).close[0]:
+                print("Close Call on Stop Loss")
+                self.order = self.close(data=call)
+            elif self.getpositionbyname(call).price * 1.2 < self.getdatabyname(call).close[0]:
+                print("Close Call on Big Profit")
                 self.order = self.close(data=call)
         self.last_rsi = self.rsi + 0.0
 
@@ -210,7 +223,8 @@ class RSICall(bt.Strategy):
 
 def run(args=None):
     cerebro = bt.Cerebro()
-    store = bt.stores.IBStore(port=7497)
+    store = bt.stores.IBStore(port=7496)
+    #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
         rtbar=not backtest_glob,  # use RealTime 5 seconds bars
@@ -222,12 +236,12 @@ def run(args=None):
         tradename=None,  # use a different asset as order target
         compression=1
     )
-    
+
 
     data0 = store.getdata(dataname="%s-STK-SMART-USD" % symbol_glob, **stockkwargs)
     datap = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
     datac = store.getdata(dataname="%s-%s-SMART-USD-%s-CALL" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
-    
+
     cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
     cerebro.resampledata(datap, timeframe=bt.TimeFrame.Minutes, compression=1)
     cerebro.resampledata(datac, timeframe=bt.TimeFrame.Minutes, compression=1)
@@ -235,8 +249,8 @@ def run(args=None):
     cerebro.adddata(data0, name='stock')
     cerebro.adddata(datap, name=put)
     cerebro.adddata(datac, name=call)
-    
-    cerebro.broker.setcash(100)
+
+    cerebro.broker.setcash(1000)
     stval = cerebro.broker.getvalue()
 
     if backtest_glob == False:
