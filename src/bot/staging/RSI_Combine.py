@@ -30,44 +30,32 @@ import backtrader.feeds as btfeeds
 import yfinance as yf
 
 from config import *
+from utils import *
 
-def getTradingRange(symbol):
+expdate_glob = ""
+strike_glob = ""
+
+def updateGlobalVar(symbol):
+    global expdate_glob
+    global strike_glob
     stock = yf.Ticker(symbol)
     latest_price = stock.history(period='0d', interval='1m')['Close'][-1]
     basetime = stock.options[2].replace('-', '') # get 3-5dte date
 
-    # Completely optional but I recommend having some sort of round(er?).
-    # Dealing with 148.60000610351562 is a pain.
-    return basetime, int(latest_price)
+    expdate_glob = basetime
+    strike_glob = int(latest_price)
 
-expdate, strike_glob = getTradingRange(symbol_glob)
+    print("global var update: "  + symbol_glob + " " + expdate_glob + " " + str(strike_glob))
+    return
 
 put = 'p%s' % str(strike_glob)
 call = 'c%s' % str(strike_glob)
 
-class RSIPut(bt.Strategy):
+class RSIPut(StrategyWithLogging):
     def __init__(self):
         self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
         self.order = None
         self.last_rsi = self.rsi + 0.0
-
-    # outputting information
-    def log(self, txt):
-        dt=self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
-
-    def logdata(self):
-        txt = []
-        txt.append('{}'.format(len(self)))
-        txt.append('{}'.format(self.data.datetime.datetime(0).isoformat()))
-        txt.append('{:.2f}'.format(self.data.open[0]))
-        txt.append('{:.2f}'.format(self.data.high[0]))
-        txt.append('{:.2f}'.format(self.data.low[0]))
-        txt.append('{:.2f}'.format(self.data.close[0]))
-        txt.append('{:.2f}'.format(self.data.volume[0]))
-        print(','.join(txt))
-
-    data_live = False
 
     def next(self):
         self.logdata()
@@ -97,67 +85,13 @@ class RSIPut(bt.Strategy):
                 print("Close Put on Target")
                 self.order = self.close(data=put)
 
-
         self.last_rsi = self.rsi + 0.0
 
-    def notify_data(self, data, status, *args, **kwargs):
-        print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
-        if status == data.LIVE:
-            self.data_live = True
-
-    def notify_order(self, order):
-        if order.status in [order.Submitted, order.Accepted]:
-            # Buy/Sell order submitted/accepted to/by broker - Nothing to do
-            return
-
-        # Check if an order has been completed
-        # Attention: broker could reject order if not enough cash
-        if order.status in [order.Completed]:
-            if order.isbuy():
-                self.log(
-                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                    (order.executed.price,
-                     order.executed.value,
-                     order.executed.comm))
-
-                self.buyprice = order.executed.price
-                self.buycomm = order.executed.comm
-            else:  # Sell
-                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                         (order.executed.price,
-                          order.executed.value,
-                          order.executed.comm))
-
-            self.bar_executed = len(self)
-
-        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
-            self.log('Order Canceled/Margin/Rejected')
-
-        self.order = None
-
-class RSICall(bt.Strategy):
+class RSICall(StrategyWithLogging):
     def __init__(self):
         self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
         self.order = None
         self.last_rsi = self.rsi + 0.0
-
-    # outputting information
-    def log(self, txt):
-        dt=self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
-
-    def logdata(self):
-        txt = []
-        txt.append('{}'.format(len(self)))
-        txt.append('{}'.format(self.data.datetime.datetime(0).isoformat()))
-        txt.append('{:.2f}'.format(self.data.open[0]))
-        txt.append('{:.2f}'.format(self.data.high[0]))
-        txt.append('{:.2f}'.format(self.data.low[0]))
-        txt.append('{:.2f}'.format(self.data.close[0]))
-        txt.append('{:.2f}'.format(self.data.volume[0]))
-        print(','.join(txt))
-
-    data_live = False
 
     def next(self):
         if backtest_glob == False:
@@ -185,42 +119,8 @@ class RSICall(bt.Strategy):
                 self.order = self.close(data=call)
         self.last_rsi = self.rsi + 0.0
 
-    def notify_data(self, data, status, *args, **kwargs):
-        print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
-        if status == data.LIVE:
-            self.data_live = True
-
-    def notify_order(self, order):
-        if order.status in [order.Submitted, order.Accepted]:
-            # Buy/Sell order submitted/accepted to/by broker - Nothing to do
-            return
-
-        # Check if an order has been completed
-        # Attention: broker could reject order if not enough cash
-        if order.status in [order.Completed]:
-            if order.isbuy():
-                self.log(
-                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                    (order.executed.price,
-                     order.executed.value,
-                     order.executed.comm))
-
-                self.buyprice = order.executed.price
-                self.buycomm = order.executed.comm
-            else:  # Sell
-                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                         (order.executed.price,
-                          order.executed.value,
-                          order.executed.comm))
-
-            self.bar_executed = len(self)
-
-        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
-            self.log('Order Canceled/Margin/Rejected')
-
-        self.order = None
-
 def run(args=None):
+    updateGlobalVar(symbol_glob)
     cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
@@ -238,8 +138,8 @@ def run(args=None):
 
 
     data0 = store.getdata(dataname="%s-STK-SMART-USD" % symbol_glob, **stockkwargs)
-    datap = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
-    datac = store.getdata(dataname="%s-%s-SMART-USD-%s-CALL" % (symbol_glob, expdate, str(strike_glob)), **stockkwargs)
+    datap = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate_glob, str(strike_glob)), **stockkwargs)
+    datac = store.getdata(dataname="%s-%s-SMART-USD-%s-CALL" % (symbol_glob, expdate_glob, str(strike_glob)), **stockkwargs)
 
     cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
     cerebro.resampledata(datap, timeframe=bt.TimeFrame.Minutes, compression=1)
@@ -261,10 +161,11 @@ def run(args=None):
 
     endval = cerebro.broker.getvalue()
 
-    cerebro.plot()
+    #cerebro.plot()
     print(stval)
     print(endval)
 
 
 if __name__ == '__main__':
-    run()
+    while True:
+        run()
