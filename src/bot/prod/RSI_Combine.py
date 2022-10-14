@@ -79,9 +79,9 @@ class RSIPut(bt.Strategy):
 
         print("rsi %s put %s price %s" % (str(self.rsi + 0.0), self.getdatabyname(put).close[0], self.getpositionbyname(put).price))
 
-        #if self.order:
-        #    print("pending order, returning")
-        #    return
+        if self.order:
+            print("pending order, returning")
+            return
 
         if self.getpositionbyname(put).size <= 0:
             if self.rsi > 70 and self.rsi < self.last_rsi:
@@ -164,9 +164,9 @@ class RSICall(bt.Strategy):
         if backtest_glob == False:
             if self.data_live == False:
                 return
-        #if self.order:
-        #    print("call order pending, returning")
-        #    return
+        if self.order:
+            print("call order pending, returning")
+            return
 
         print("rsi %s %s call %s price %s" % (str(self.rsi + 0.01), self.last_rsi, self.getdatabyname(call).close[0], self.getpositionbyname(call).price))
 
