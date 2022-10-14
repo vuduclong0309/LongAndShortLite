@@ -29,8 +29,7 @@ import backtrader.feeds as btfeeds
 
 import yfinance as yf
 
-backtest_glob = False
-symbol_glob = "SPY"
+from config import *
 
 def getTradingRange(symbol):
     stock = yf.Ticker(symbol)
@@ -97,8 +96,8 @@ class RSIPut(bt.Strategy):
             elif self.getpositionbyname(put).price * 1.15 < self.getdatabyname(put).close[0] and self.rsi > self.last_rsi:
                 print("Close Put on Target")
                 self.order = self.close(data=put)
-                
-                
+
+
         self.last_rsi = self.rsi + 0.0
 
     def notify_data(self, data, status, *args, **kwargs):
@@ -223,7 +222,7 @@ class RSICall(bt.Strategy):
 
 def run(args=None):
     cerebro = bt.Cerebro()
-    store = bt.stores.IBStore(port=7496)
+    store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
