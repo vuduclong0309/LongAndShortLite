@@ -13,4 +13,6 @@ symbol_glob = "SPY"
 trade_timeframe_type = bt.TimeFrame.Seconds
 trade_timeframe_compress = 15
 
+price_ceiling = 6.0
+
   

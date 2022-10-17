@@ -65,6 +65,14 @@ class RSIPut(StrategyWithLogging):
                 return
 
         sec_price = self.getpositionbyname('put').price / p_factor
+        last_close = self.getdatabyname('put').close[0]
+
+        #print(last_close)
+        #print(price_ceiling)
+
+        if last_close > price_ceiling:
+            print("Price trade deviated, exiting and recalibrate")
+            self.cerebro.runstop()
 
         print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
 
@@ -75,6 +83,11 @@ class RSIPut(StrategyWithLogging):
         if self.getpositionbyname('put').size <= 0:
             if self.rsi_arr[-2]> 70 and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Buy Put")
+                if last_close > price_ceiling:
+                    print("Price trade deviated, exiting and recalibrate")
+                    #   Make sure to close all position before stop, otherwise we will have hanging position
+                    #   But this strat ensure this not happen, to do advanced stop later
+                    self.cerebro.runstop()
                 self.order = self.buy(data='put', size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
@@ -107,12 +120,18 @@ class RSICall(StrategyWithLogging):
             return
         
         sec_price = self.getpositionbyname('call').price / p_factor
+        last_close = self.getdatabyname('call').close[0]
 
         print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
 
         if self.getpositionbyname('call').size <= 0:
             if self.rsi_arr[-2]< 30 and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Buy Call")
+                if last_close > price_ceiling:
+                    print("Price trade deviated, exiting and recalibrate")
+                    #   Make sure to close all position before stop, otherwise we will have hanging position
+                    #   But this strat ensure this not happen, to do advanced stop later
+                    self.cerebro.runstop()
                 self.order = self.buy(data='call', size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
 
