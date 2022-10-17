@@ -67,7 +67,9 @@ class RSIPut(StrategyWithLogging):
             if self.data_live == False:
                 return
 
-        print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(put).close[0], self.getpositionbyname(put).price))
+        sec_price = self.getpositionbyname(put).price / p_factor
+
+        print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(put).close[0], sec_price))
 
         if self.order:
             print("pending order, returning")
@@ -81,10 +83,10 @@ class RSIPut(StrategyWithLogging):
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data=put)
-            elif self.getpositionbyname(put).price * 0.9 > self.getdatabyname(put).close[0]:
+            elif sec_price * 0.9 > self.getdatabyname(put).close[0]:
                 print("Close Put on Stop Loss")
                 self.order = self.close(data=put)
-            elif self.getpositionbyname(put).price * 1.15 < self.getdatabyname(put).close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
+            elif sec_price * 1.15 < self.getdatabyname(put).close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Close Put on Target")
                 self.order = self.close(data=put)
 
@@ -106,21 +108,24 @@ class RSICall(StrategyWithLogging):
         if self.order:
             print("call order pending, returning")
             return
+        
+        sec_price = self.getpositionbyname(call).price / p_factor
 
-        print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(call).close[0], self.getpositionbyname(call).price))
+        print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(call).close[0], sec_price))
 
         if self.getpositionbyname(call).size <= 0:
             if self.rsi_arr[-1]< 30 and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Buy Call")
                 self.order = self.buy(data=call, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
+
             if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
                 self.order = self.close(data=call)
-            elif self.getpositionbyname(call).price * 0.9 > self.getdatabyname(call).close[0]:
+            elif sec_price * 0.9 > self.getdatabyname(call).close[0]:
                 print("Close Call on Stop Loss")
                 self.order = self.close(data=call)
-            elif self.getpositionbyname(call).price * 1.15 < self.getdatabyname(call).close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
+            elif sec_price * 1.15 < self.getdatabyname(call).close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Close Call on Big Profit")
                 self.order = self.close(data=call)
 
