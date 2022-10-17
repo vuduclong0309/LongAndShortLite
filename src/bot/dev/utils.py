@@ -60,3 +60,6 @@ class StrategyWithLogging(bt.Strategy):
             self.log('Order Canceled/Margin/Rejected')
 
         self.order = None
+
+    def notify_store(self, msg, *args, **kwargs):
+        print('STORE NOTIF:{}', msg)

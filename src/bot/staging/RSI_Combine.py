@@ -48,9 +48,6 @@ def updateGlobalVar(symbol):
     print("global var update: "  + symbol_glob + " " + expdate_glob + " " + str(strike_glob))
     return
 
-put = 'p%s' % str(strike_glob)
-call = 'c%s' % str(strike_glob)
-
 class RSIPut(StrategyWithLogging):
     def __init__(self):
         self.rsi = bt.talib.RSI(self.data.close, period=14)
@@ -67,26 +64,41 @@ class RSIPut(StrategyWithLogging):
             if self.data_live == False:
                 return
 
-        print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(put).close[0], self.getpositionbyname(put).price))
+        sec_price = self.getpositionbyname('put').price / p_factor
+        last_close = self.getdatabyname('put').close[0]
+
+        #print(last_close)
+        #print(price_ceiling)
+
+        if last_close > price_ceiling:
+            print("Price trade deviated, exiting and recalibrate")
+            self.cerebro.runstop()
+
+        print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
 
         if self.order:
             print("pending order, returning")
             return
 
-        if self.getpositionbyname(put).size <= 0:
-            if self.rsi_arr[-1]> 70 and self.rsi_arr[-1]< self.rsi_arr[-2]:
+        if self.getpositionbyname('put').size <= 0:
+            if self.rsi_arr[-2]> 70 and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Buy Put")
-                self.order = self.buy(data=put, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
+                if last_close > price_ceiling:
+                    print("Price trade deviated, exiting and recalibrate")
+                    #   Make sure to close all position before stop, otherwise we will have hanging position
+                    #   But this strat ensure this not happen, to do advanced stop later
+                    self.cerebro.runstop()
+                self.order = self.buy(data='put', size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
-                self.order = self.close(data=put)
-            elif self.getpositionbyname(put).price * 0.9 > self.getdatabyname(put).close[0]:
+                self.order = self.close(data='put')
+            elif sec_price * 0.9 > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
-                self.order = self.close(data=put)
-            elif self.getpositionbyname(put).price * 1.15 < self.getdatabyname(put).close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
+                self.order = self.close(data='put')
+            elif sec_price * 1.15 < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Close Put on Target")
-                self.order = self.close(data=put)
+                self.order = self.close(data='put')
 
 
 class RSICall(StrategyWithLogging):
@@ -106,23 +118,32 @@ class RSICall(StrategyWithLogging):
         if self.order:
             print("call order pending, returning")
             return
+        
+        sec_price = self.getpositionbyname('call').price / p_factor
+        last_close = self.getdatabyname('call').close[0]
 
-        print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(call).close[0], self.getpositionbyname(call).price))
+        print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
 
-        if self.getpositionbyname(call).size <= 0:
-            if self.rsi_arr[-1]< 30 and self.rsi_arr[-1]> self.rsi_arr[-2]:
+        if self.getpositionbyname('call').size <= 0:
+            if self.rsi_arr[-2]< 30 and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Buy Call")
-                self.order = self.buy(data=call, size=1, trailpercent = 10) # buy when closing price today crosses above MA.
+                if last_close > price_ceiling:
+                    print("Price trade deviated, exiting and recalibrate")
+                    #   Make sure to close all position before stop, otherwise we will have hanging position
+                    #   But this strat ensure this not happen, to do advanced stop later
+                    self.cerebro.runstop()
+                self.order = self.buy(data='call', size=1, trailpercent = 10) # buy when closing price today crosses above MA.
         else:
+
             if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
-                self.order = self.close(data=call)
-            elif self.getpositionbyname(call).price * 0.9 > self.getdatabyname(call).close[0]:
+                self.order = self.close(data='call')
+            elif sec_price * 0.9 > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
-                self.order = self.close(data=call)
-            elif self.getpositionbyname(call).price * 1.15 < self.getdatabyname(call).close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
+                self.order = self.close(data='call')
+            elif sec_price * 1.15 < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Close Call on Big Profit")
-                self.order = self.close(data=call)
+                self.order = self.close(data='call')
 
 def run(args=None):
     updateGlobalVar(symbol_glob)
@@ -130,7 +151,8 @@ def run(args=None):
     store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
-        timeframe=bt.TimeFrame.Seconds,
+        timeframe=bt.TimeFrame.Minutes,
+        compression=1,
         rtbar=True,  # use RealTime 5 seconds bars
         historical=backtest_glob,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
@@ -138,21 +160,18 @@ def run(args=None):
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
         tradename=None,  # use a different asset as order target
-        compression=1
     )
 
+    datafeeds = [
+        ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
+        ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('call'     , "%s-%s-SMART-USD-%s-CALL"     % (symbol_glob, expdate_glob, str(strike_glob))     )
+    ]
 
-    data0 = store.getdata(dataname="%s-STK-SMART-USD" % symbol_glob, **stockkwargs)
-    datap = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate_glob, str(strike_glob)), **stockkwargs)
-    datac = store.getdata(dataname="%s-%s-SMART-USD-%s-CALL" % (symbol_glob, expdate_glob, str(strike_glob)), **stockkwargs)
-
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Seconds, compression=15)
-    cerebro.resampledata(datap, timeframe=bt.TimeFrame.Seconds, compression=15)
-    cerebro.resampledata(datac, timeframe=bt.TimeFrame.Seconds, compression=15)
-
-    cerebro.adddata(data0, name='stock')
-    cerebro.adddata(datap, name=put)
-    cerebro.adddata(datac, name=call)
+    for alias, full_sec_name in datafeeds:
+        data = store.getdata(dataname = full_sec_name, **stockkwargs)
+        cerebro.resampledata(data, timeframe = trade_timeframe_type, compression=trade_timeframe_compress)
+        cerebro.adddata(data, name=alias)
 
     cerebro.broker.setcash(1000)
     stval = cerebro.broker.getvalue()
