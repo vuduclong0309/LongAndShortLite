@@ -32,8 +32,6 @@ import yfinance as yf
 from config import *
 from utils import *
 
-print(bt.talib.SMA.__doc__)
-
 expdate_glob = ""
 strike_glob = ""
 
@@ -168,10 +166,11 @@ def run(args=None):
 
     endval = cerebro.broker.getvalue()
 
-    cerebro.plot()
+    #cerebro.plot()
     print(stval)
     print(endval)
 
 
 if __name__ == '__main__':
-    run()
+    while True:
+        run()
