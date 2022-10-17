@@ -53,11 +53,13 @@ call = 'c%s' % str(strike_glob)
 
 class RSIPut(StrategyWithLogging):
     def __init__(self):
-        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
+        self.rsi = bt.talib.RSI(self.data.close, period=14)
         self.order = None
         self.rsi_arr = []
+        self.rsi_arr.append(self.rsi + 0.0)
 
     def next(self):
+        print(self.cerebro.broker.getvalue())
         self.logdata()
         self.rsi_arr.append(self.rsi + 0.0)
 
@@ -89,9 +91,10 @@ class RSIPut(StrategyWithLogging):
 
 class RSICall(StrategyWithLogging):
     def __init__(self):
-        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
+        self.rsi = bt.talib.RSI(self.data.close, period=14)
         self.order = None
         self.rsi_arr = []
+        self.rsi_arr.append(self.rsi + 0.0)
 
     def next(self):
         self.rsi_arr.append(self.rsi + 0.0)
@@ -105,7 +108,6 @@ class RSICall(StrategyWithLogging):
             return
 
         print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname(call).close[0], self.getpositionbyname(call).price))
-        print(self.rsi + 0.0)
 
         if self.getpositionbyname(call).size <= 0:
             if self.rsi_arr[-1]< 30 and self.rsi_arr[-1]> self.rsi_arr[-2]:
@@ -128,8 +130,8 @@ def run(args=None):
     store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
-        timeframe=bt.TimeFrame.Minutes,
-        rtbar=not backtest_glob,  # use RealTime 5 seconds bars
+        timeframe=bt.TimeFrame.Seconds,
+        rtbar=True,  # use RealTime 5 seconds bars
         historical=backtest_glob,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
@@ -144,9 +146,9 @@ def run(args=None):
     datap = store.getdata(dataname="%s-%s-SMART-USD-%s-PUT" % (symbol_glob, expdate_glob, str(strike_glob)), **stockkwargs)
     datac = store.getdata(dataname="%s-%s-SMART-USD-%s-CALL" % (symbol_glob, expdate_glob, str(strike_glob)), **stockkwargs)
 
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
-    cerebro.resampledata(datap, timeframe=bt.TimeFrame.Minutes, compression=1)
-    cerebro.resampledata(datac, timeframe=bt.TimeFrame.Minutes, compression=1)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Seconds, compression=15)
+    cerebro.resampledata(datap, timeframe=bt.TimeFrame.Seconds, compression=15)
+    cerebro.resampledata(datac, timeframe=bt.TimeFrame.Seconds, compression=15)
 
     cerebro.adddata(data0, name='stock')
     cerebro.adddata(datap, name=put)
