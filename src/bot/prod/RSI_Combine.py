@@ -88,15 +88,15 @@ class RSIPut(StrategyWithLogging):
                     #   Make sure to close all position before stop, otherwise we will have hanging position
                     #   But this strat ensure this not happen, to do advanced stop later
                     self.cerebro.runstop()
-                self.order = self.buy(data='put', size=1, trailpercent = 10) # buy when closing price today crosses above MA.
+                self.order = self.buy(data='put', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data='put')
-            elif sec_price * 0.9 > self.getdatabyname('put').close[0]:
+            elif sec_price * 0.93 > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
                 self.order = self.close(data='put')
-            elif sec_price * 1.15 < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
+            elif sec_price * 1.1 < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Close Put on Target")
                 self.order = self.close(data='put')
 
@@ -118,7 +118,7 @@ class RSICall(StrategyWithLogging):
         if self.order:
             print("call order pending, returning")
             return
-        
+
         sec_price = self.getpositionbyname('call').price / p_factor
         last_close = self.getdatabyname('call').close[0]
 
@@ -132,16 +132,16 @@ class RSICall(StrategyWithLogging):
                     #   Make sure to close all position before stop, otherwise we will have hanging position
                     #   But this strat ensure this not happen, to do advanced stop later
                     self.cerebro.runstop()
-                self.order = self.buy(data='call', size=1, trailpercent = 10) # buy when closing price today crosses above MA.
+                self.order = self.buy(data='call', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
 
             if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
                 self.order = self.close(data='call')
-            elif sec_price * 0.9 > self.getdatabyname('call').close[0]:
+            elif sec_price * 0.93 > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
                 self.order = self.close(data='call')
-            elif sec_price * 1.15 < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
+            elif sec_price * 1.1 < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Close Call on Big Profit")
                 self.order = self.close(data='call')
 
