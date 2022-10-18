@@ -60,3 +60,9 @@ class StrategyWithLogging(bt.Strategy):
             self.log('Order Canceled/Margin/Rejected')
 
         self.order = None
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        self.logger.info('notify_timer: when: {}', when)
+        if self.p.stop_on_eod and self._state == self._ST_LIVE and self._in_terminal_state():
+            self.logger.info('EOD Timer: Stopping strategy at eod.')
+            self.cerebro.runstop()
