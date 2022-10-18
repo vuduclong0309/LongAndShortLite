@@ -76,8 +76,12 @@ class RSIPut(StrategyWithLogging):
             self.cerebro.runstop()
 
         print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
+        if(self.stop_loss_wait_neutral == True):
+            print("Waiting for neutral")
 
         if self.rsi_arr[-1] < 50:
+            if(self.stop_loss_wait_neutral == True):
+                print("Neutral Waiting Finished")
             self.stop_loss_wait_neutral = False
 
         if self.order:
@@ -95,15 +99,16 @@ class RSIPut(StrategyWithLogging):
                     #   Make sure to close all position before stop, otherwise we will have hanging position
                     #   But this strat ensure this not happen, to do advanced stop later
                     self.cerebro.runstop()
-                self.order = self.buy(data='put', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
+                else:
+                    self.order = self.buy(data='put', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data='put')
             elif sec_price * 0.93 > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
-                self.order = self.close(data='put')
                 self.stop_loss_wait_neutral = True
+                self.order = self.close(data='put')
             elif sec_price * 1.1 < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Close Put on Target")
                 self.order = self.close(data='put')
@@ -132,7 +137,12 @@ class RSICall(StrategyWithLogging):
         last_close = self.getdatabyname('call').close[0]
 
         print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
+        if(self.stop_loss_wait_neutral == True):
+            print("Waiting for neutral")
+
         if self.rsi_arr[-1] > 50:
+            if(self.stop_loss_wait_neutral == True):
+                print("Neutral Waiting Finished")
             self.stop_loss_wait_neutral = False
 
         if self.getpositionbyname('call').size <= 0:
@@ -146,7 +156,8 @@ class RSICall(StrategyWithLogging):
                     #   Make sure to close all position before stop, otherwise we will have hanging position
                     #   But this strat ensure this not happen, to do advanced stop later
                     self.cerebro.runstop()
-                self.order = self.buy(data='call', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
+                else:
+                    self.order = self.buy(data='call', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
 
             if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
@@ -154,8 +165,8 @@ class RSICall(StrategyWithLogging):
                 self.order = self.close(data='call')
             elif sec_price * 0.93 > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
-                self.order = self.close(data='call')
                 self.stop_loss_wait_neutral = True
+                self.order = self.close(data='call')
             elif sec_price * 1.1 < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Close Call on Big Profit")
                 self.order = self.close(data='call')
