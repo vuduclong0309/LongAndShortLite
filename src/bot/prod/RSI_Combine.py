@@ -22,6 +22,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import datetime
+import pytz
 
 import backtrader as bt
 import backtrader.indicators as btind
@@ -34,6 +35,8 @@ from utils import *
 
 expdate_glob = ""
 strike_glob = ""
+
+eod = False
 
 def updateGlobalVar(symbol):
     global expdate_glob
@@ -65,8 +68,23 @@ class RSIPut(StrategyWithLogging):
             if self.data_live == False:
                 return
 
+
+        bar_time = self.data.datetime.datetime(0)
+
+        if(bar_time < self.start_time):
+            print("Not in trading time yet")
+            return
+
+        if(bar_time > self.close_time):
+            print("Closing Position EOD")
+            global eod
+            eod = True
+            self.eod_flush_position()
+            return
+
         sec_price = self.getpositionbyname('put').price / p_factor
         last_close = self.getdatabyname('put').close[0]
+
 
         print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
         if(self.stop_loss_wait_neutral == True):
@@ -124,6 +142,19 @@ class RSICall(StrategyWithLogging):
 
         if self.order:
             print("call order pending, returning")
+            return
+
+        bar_time = self.data.datetime.datetime(0)
+
+        if(bar_time < self.start_time):
+            print("Not in trading time yet")
+            return
+
+        if(bar_time > self.close_time):
+            print("Closing Position EOD")
+            global eod
+            eod = True
+            self.eod_flush_position()
             return
 
         sec_price = self.getpositionbyname('call').price / p_factor
@@ -210,5 +241,6 @@ def run(args=None):
 
 
 if __name__ == '__main__':
-    while True:
+    while eod == False:
+        print(eod)
         run()
