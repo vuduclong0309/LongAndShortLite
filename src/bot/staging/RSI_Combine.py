@@ -68,12 +68,6 @@ class RSIPut(StrategyWithLogging):
         sec_price = self.getpositionbyname('put').price / p_factor
         last_close = self.getdatabyname('put').close[0]
 
-        #print(last_close)
-        #print(price_ceiling)
-
-        if last_close > price_ceiling:
-            print("Price trade deviated, exiting and recalibrate")
-            self.cerebro.runstop()
 
         print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
         if(self.stop_loss_wait_neutral == True):
