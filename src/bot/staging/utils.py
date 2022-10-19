@@ -2,12 +2,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import datetime
+import pytz
 
 import backtrader as bt
 import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
 class StrategyWithLogging(bt.Strategy):
+    start_time = None
+    close_time = None 
+
     # outputting information
     def log(self, txt):
         dt=self.datas[0].datetime.date(0)
@@ -30,6 +34,12 @@ class StrategyWithLogging(bt.Strategy):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
         if status == data.LIVE:
             self.data_live = True
+            #sgtz = pytz.timezone("Asia/Singapore")
+            #nytz = pytz.timezone("America/New_York")
+
+            nytime_now = datetime.datetime.now()
+            self.start_time = nytime_now.replace(hour = 9, minute = 45, second = 0)
+            self.close_time = nytime_now.replace(hour = 15, minute = 55, second = 0)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -61,8 +71,7 @@ class StrategyWithLogging(bt.Strategy):
 
         self.order = None
 
-    def notify_timer(self, timer, when, *args, **kwargs):
-        self.logger.info('notify_timer: when: {}', when)
-        if self.p.stop_on_eod and self._state == self._ST_LIVE and self._in_terminal_state():
-            self.logger.info('EOD Timer: Stopping strategy at eod.')
-            self.cerebro.runstop()
+    def eod_flush_position(self):
+        self.close(data='put')
+        self.close(data='call')
+        self.cerebro.runstop()
