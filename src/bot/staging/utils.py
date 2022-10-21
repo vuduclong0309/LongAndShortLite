@@ -10,7 +10,7 @@ import backtrader.feeds as btfeeds
 
 class StrategyWithLogging(bt.Strategy):
     start_time = None
-    close_time = None 
+    close_time = None
 
     # outputting information
     def log(self, txt):
@@ -29,6 +29,9 @@ class StrategyWithLogging(bt.Strategy):
         print(','.join(txt))
 
     data_live = False
+
+    def notify_store(self, msg, *args, **kwargs):
+        print('STORE NOTIF:{}', msg)
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
