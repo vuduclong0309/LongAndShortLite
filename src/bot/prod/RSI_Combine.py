@@ -61,9 +61,13 @@ class RSIPut(StrategyWithLogging):
 
     def next(self):
         print(self.cerebro.broker.getvalue())
-        self.have_position()
         self.logdata()
         self.rsi_arr.append(self.rsi + 0.0)
+
+        sec_price = self.getpositionbyname('put').price / p_factor
+        last_close = self.getdatabyname('put').close[0]
+
+        print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
 
         if backtest_glob == False:
             if self.data_live == False:
@@ -82,14 +86,10 @@ class RSIPut(StrategyWithLogging):
                 self.eod_flush_position()
                 return
 
-        sec_price = self.getpositionbyname('put').price / p_factor
-        last_close = self.getdatabyname('put').close[0]
-
-        if last_close > price_ceiling and not self.have_position():
+        if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
-        print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
         if(self.stop_loss_wait_neutral == True):
             print("Waiting for neutral")
 
@@ -110,7 +110,7 @@ class RSIPut(StrategyWithLogging):
                 else:
                     self.order = self.buy(data='put', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
-            if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
+            if ((self.rsi_arr[-1]< 30 + safe_padding or self.rsi_arr[-2] < 30 + safe_padding) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data='put')
             elif sec_price * 0.91 > self.getdatabyname('put').close[0]:
@@ -137,6 +137,11 @@ class RSICall(StrategyWithLogging):
             if self.data_live == False:
                 return
 
+        sec_price = self.getpositionbyname('call').price / p_factor
+        last_close = self.getdatabyname('call').close[0]
+        
+        print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
+        
         if self.order:
             print("call order pending, returning")
             return
@@ -154,14 +159,10 @@ class RSICall(StrategyWithLogging):
                 self.eod_flush_position()
                 return
 
-        sec_price = self.getpositionbyname('call').price / p_factor
-        last_close = self.getdatabyname('call').close[0]
-
-        if last_close > price_ceiling and not self.have_position():
+        if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
-        print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
         if(self.stop_loss_wait_neutral == True):
             print("Waiting for neutral")
 
@@ -179,7 +180,7 @@ class RSICall(StrategyWithLogging):
                     self.order = self.buy(data='call', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
 
-            if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
+            if ((self.rsi_arr[-1]> 70 - safe_padding or self.rsi_arr[-2] > 70 - safe_padding) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
                 self.order = self.close(data='call')
             elif sec_price * 0.91 > self.getdatabyname('call').close[0]:
