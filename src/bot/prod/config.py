@@ -14,3 +14,4 @@ trade_timeframe_type = bt.TimeFrame.Seconds
 trade_timeframe_compress = 15
 
 price_ceiling = 7.5
+safe_padding = 2
