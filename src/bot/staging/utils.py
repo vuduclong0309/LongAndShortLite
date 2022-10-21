@@ -34,12 +34,15 @@ class StrategyWithLogging(bt.Strategy):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
         if status == data.LIVE:
             self.data_live = True
-            #sgtz = pytz.timezone("Asia/Singapore")
-            #nytz = pytz.timezone("America/New_York")
+            sgtz = pytz.timezone("Asia/Singapore")
+            nytz = pytz.timezone("America/New_York")
 
-            nytime_now = datetime.datetime.now()
-            self.start_time = nytime_now.replace(hour = 9, minute = 45, second = 0)
-            self.close_time = nytime_now.replace(hour = 15, minute = 55, second = 0)
+            nytime_now = sgtz.localize(datetime.datetime.now()).astimezone(nytz)
+            print(nytime_now)
+            self.start_time = nytime_now.replace(hour = 9, minute = 45, second = 0).replace(tzinfo=None)
+            self.close_time = nytime_now.replace(hour = 15, minute = 55, second = 0).replace(tzinfo=None)
+            print(self.close_time)
+            print(self.start_time)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -75,3 +78,9 @@ class StrategyWithLogging(bt.Strategy):
         self.close(data='put')
         self.close(data='call')
         self.cerebro.runstop()
+
+    def have_position(self):
+        for k, v in self.positions.items():
+            if v.size != 0:
+                return True
+        return False

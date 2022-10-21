@@ -22,6 +22,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import datetime
+import pytz
 
 import backtrader as bt
 import backtrader.indicators as btind
@@ -34,6 +35,8 @@ from utils import *
 
 expdate_glob = ""
 strike_glob = ""
+
+eod = False
 
 def updateGlobalVar(symbol):
     global expdate_glob
@@ -58,6 +61,7 @@ class RSIPut(StrategyWithLogging):
 
     def next(self):
         print(self.cerebro.broker.getvalue())
+        self.have_position()
         self.logdata()
         self.rsi_arr.append(self.rsi + 0.0)
 
@@ -65,13 +69,23 @@ class RSIPut(StrategyWithLogging):
             if self.data_live == False:
                 return
 
+            bar_time = self.data.datetime.datetime(0)
+
+            if(bar_time < self.start_time):
+                print("Not in trading time yet")
+                return
+
+            if(bar_time > self.close_time):
+                print("Closing Position EOD")
+                global eod
+                eod = True
+                self.eod_flush_position()
+                return
+
         sec_price = self.getpositionbyname('put').price / p_factor
         last_close = self.getdatabyname('put').close[0]
 
-        #print(last_close)
-        #print(price_ceiling)
-
-        if last_close > price_ceiling:
+        if last_close > price_ceiling and not self.have_position():
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
@@ -79,7 +93,7 @@ class RSIPut(StrategyWithLogging):
         if(self.stop_loss_wait_neutral == True):
             print("Waiting for neutral")
 
-        if self.rsi_arr[-1] < 50:
+        if self.rsi_arr[-1] <= 30:
             if(self.stop_loss_wait_neutral == True):
                 print("Neutral Waiting Finished")
             self.stop_loss_wait_neutral = False
@@ -93,19 +107,13 @@ class RSIPut(StrategyWithLogging):
                 print("Buy Put")
                 if self.stop_loss_wait_neutral == True:
                     print("Hostile Condition, waiting until neutral")
-
-                elif last_close > price_ceiling:
-                    print("Price trade deviated, exiting and recalibrate")
-                    #   Make sure to close all position before stop, otherwise we will have hanging position
-                    #   But this strat ensure this not happen, to do advanced stop later
-                    self.cerebro.runstop()
                 else:
                     self.order = self.buy(data='put', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data='put')
-            elif sec_price * 0.93 > self.getdatabyname('put').close[0]:
+            elif sec_price * 0.91 > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
                 self.stop_loss_wait_neutral = True
                 self.order = self.close(data='put')
@@ -133,14 +141,31 @@ class RSICall(StrategyWithLogging):
             print("call order pending, returning")
             return
 
+            bar_time = self.data.datetime.datetime(0)
+
+            if(bar_time < self.start_time):
+                print("Not in trading time yet")
+                return
+
+            if(bar_time > self.close_time):
+                print("Closing Position EOD")
+                global eod
+                eod = True
+                self.eod_flush_position()
+                return
+
         sec_price = self.getpositionbyname('call').price / p_factor
         last_close = self.getdatabyname('call').close[0]
+
+        if last_close > price_ceiling and not self.have_position():
+            print("Price trade deviated, exiting and recalibrate")
+            self.cerebro.runstop()
 
         print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
         if(self.stop_loss_wait_neutral == True):
             print("Waiting for neutral")
 
-        if self.rsi_arr[-1] > 50:
+        if self.rsi_arr[-1] >= 70:
             if(self.stop_loss_wait_neutral == True):
                 print("Neutral Waiting Finished")
             self.stop_loss_wait_neutral = False
@@ -150,12 +175,6 @@ class RSICall(StrategyWithLogging):
                 print("Buy Call")
                 if self.stop_loss_wait_neutral == True:
                     print("Hostile Condition, waiting until neutral")
-
-                elif last_close > price_ceiling:
-                    print("Price trade deviated, exiting and recalibrate")
-                    #   Make sure to close all position before stop, otherwise we will have hanging position
-                    #   But this strat ensure this not happen, to do advanced stop later
-                    self.cerebro.runstop()
                 else:
                     self.order = self.buy(data='call', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
         else:
@@ -163,7 +182,7 @@ class RSICall(StrategyWithLogging):
             if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
                 self.order = self.close(data='call')
-            elif sec_price * 0.93 > self.getdatabyname('call').close[0]:
+            elif sec_price * 0.91 > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
                 self.stop_loss_wait_neutral = True
                 self.order = self.close(data='call')
@@ -217,5 +236,6 @@ def run(args=None):
 
 
 if __name__ == '__main__':
-    while True:
+    while eod == False:
+        print(eod)
         run()

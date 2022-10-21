@@ -78,3 +78,9 @@ class StrategyWithLogging(bt.Strategy):
         self.close(data='put')
         self.close(data='call')
         self.cerebro.runstop()
+
+    def have_position(self):
+        for k, v in self.positions.items():
+            if v.size != 0:
+                return True
+        return False
