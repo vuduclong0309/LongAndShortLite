@@ -5,7 +5,7 @@ import backtrader.feeds as btfeeds
 #IBKR Client parameters
 port_conf=7497
 p_factor = 100  # IBKR simul broker has option price *100, thus need to divide by 100 to make price back to normal
-use_rt_bar = False
+use_rt_bar = True
 
 # Trade parameters
 backtest_glob = False
