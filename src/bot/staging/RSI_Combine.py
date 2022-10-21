@@ -68,7 +68,7 @@ class RSIPut(StrategyWithLogging):
             if self.data_live == False:
                 return
 
-
+        
         bar_time = self.data.datetime.datetime(0)
 
         if(bar_time < self.start_time):
@@ -90,7 +90,7 @@ class RSIPut(StrategyWithLogging):
         if(self.stop_loss_wait_neutral == True):
             print("Waiting for neutral")
 
-        if self.rsi_arr[-1] < 50:
+        if self.rsi_arr[-1] <= 30:
             if(self.stop_loss_wait_neutral == True):
                 print("Neutral Waiting Finished")
             self.stop_loss_wait_neutral = False
@@ -116,7 +116,7 @@ class RSIPut(StrategyWithLogging):
             if ((self.rsi_arr[-1]< 30 or self.rsi_arr[-2] < 30) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data='put')
-            elif sec_price * 0.93 > self.getdatabyname('put').close[0]:
+            elif sec_price * 0.91 > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
                 self.stop_loss_wait_neutral = True
                 self.order = self.close(data='put')
@@ -164,7 +164,7 @@ class RSICall(StrategyWithLogging):
         if(self.stop_loss_wait_neutral == True):
             print("Waiting for neutral")
 
-        if self.rsi_arr[-1] > 50:
+        if self.rsi_arr[-1] >= 70:
             if(self.stop_loss_wait_neutral == True):
                 print("Neutral Waiting Finished")
             self.stop_loss_wait_neutral = False
@@ -187,7 +187,7 @@ class RSICall(StrategyWithLogging):
             if ((self.rsi_arr[-1]> 70 or self.rsi_arr[-2] > 70) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
                 self.order = self.close(data='call')
-            elif sec_price * 0.93 > self.getdatabyname('call').close[0]:
+            elif sec_price * 0.91 > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
                 self.stop_loss_wait_neutral = True
                 self.order = self.close(data='call')

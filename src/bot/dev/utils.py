@@ -2,12 +2,16 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import datetime
+import pytz
 
 import backtrader as bt
 import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
 class StrategyWithLogging(bt.Strategy):
+    start_time = None
+    close_time = None 
+
     # outputting information
     def log(self, txt):
         dt=self.datas[0].datetime.date(0)
@@ -30,6 +34,15 @@ class StrategyWithLogging(bt.Strategy):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
         if status == data.LIVE:
             self.data_live = True
+            sgtz = pytz.timezone("Asia/Singapore")
+            nytz = pytz.timezone("America/New_York")
+
+            nytime_now = sgtz.localize(datetime.datetime.now()).astimezone(nytz)
+            print(nytime_now)
+            self.start_time = nytime_now.replace(hour = 9, minute = 45, second = 0).replace(tzinfo=None)
+            self.close_time = nytime_now.replace(hour = 15, minute = 55, second = 0).replace(tzinfo=None)
+            print(self.close_time)
+            print(self.start_time)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -61,5 +74,7 @@ class StrategyWithLogging(bt.Strategy):
 
         self.order = None
 
-    def notify_store(self, msg, *args, **kwargs):
-        print('STORE NOTIF:{}', msg)
+    def eod_flush_position(self):
+        self.close(data='put')
+        self.close(data='call')
+        self.cerebro.runstop()
