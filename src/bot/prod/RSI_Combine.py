@@ -61,6 +61,7 @@ class RSIPut(StrategyWithLogging):
 
     def next(self):
         print(self.cerebro.broker.getvalue())
+
         self.logdata()
         self.rsi_arr.append(self.rsi + 0.0)
 
@@ -85,6 +86,10 @@ class RSIPut(StrategyWithLogging):
                 eod = True
                 self.eod_flush_position()
                 return
+
+        #print ('put ' + str(self.getpositionbyname('put').size) + ' call ' + str(self.getpositionbyname('call').size))
+        #print (self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0)
+        #print (self.have_position())
 
         if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
