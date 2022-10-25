@@ -13,8 +13,15 @@ symbol_glob = "SPY"
 trade_timeframe_type = bt.TimeFrame.Minutes
 trade_timeframe_compress = 3
 
-price_ceiling = 7.5
+price_ceiling = 10.0
+
+rsi_low = 30
+rsi_high = 70
 safe_padding = 2
+
+sl_limit = 0.9
+tp_floor = 1.1
+ct_size = 1
 
 
   
