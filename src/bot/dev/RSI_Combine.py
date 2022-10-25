@@ -57,10 +57,11 @@ class RSIPut(StrategyWithLogging):
         self.order = None
         self.rsi_arr = []
         self.rsi_arr.append(self.rsi + 0.0)
-        self.stop_loss_wait_neutral = False
+        self.stop_loss_wait_reversal = False
 
     def next(self):
         print(self.cerebro.broker.getvalue())
+
         self.logdata()
         self.rsi_arr.append(self.rsi + 0.0)
 
@@ -86,38 +87,42 @@ class RSIPut(StrategyWithLogging):
                 self.eod_flush_position()
                 return
 
+        #print ('put ' + str(self.getpositionbyname('put').size) + ' call ' + str(self.getpositionbyname('call').size))
+        #print (self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0)
+        #print (self.have_position())
+
         if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
-        if(self.stop_loss_wait_neutral == True):
+        if(self.stop_loss_wait_reversal == True):
             print("Waiting for neutral")
 
-        if self.rsi_arr[-1] <= 30:
-            if(self.stop_loss_wait_neutral == True):
+        if self.rsi_arr[-1] <= rsi_low:
+            if(self.stop_loss_wait_reversal == True):
                 print("Neutral Waiting Finished")
-            self.stop_loss_wait_neutral = False
+            self.stop_loss_wait_reversal = False
 
         if self.order:
             print("pending order, returning")
             return
 
         if self.getpositionbyname('put').size <= 0:
-            if self.rsi_arr[-2]> 70 and self.rsi_arr[-1]< self.rsi_arr[-2]:
+            if self.rsi_arr[-2]> rsi_high and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Buy Put")
-                if self.stop_loss_wait_neutral == True:
+                if self.stop_loss_wait_reversal == True:
                     print("Hostile Condition, waiting until neutral")
                 else:
-                    self.order = self.buy(data='put', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
+                    self.order = self.buy(data='put', size=ct_size) # buy when closing price today crosses above MA.
         else:
-            if ((self.rsi_arr[-1]< 30 + safe_padding or self.rsi_arr[-2] < 30 + safe_padding) and self.rsi_arr[-1]> self.rsi_arr[-2]):
+            if ((self.rsi_arr[-1]< rsi_low + safe_padding or self.rsi_arr[-2] < rsi_low + safe_padding) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
                 self.order = self.close(data='put')
-            elif sec_price * 0.91 > self.getdatabyname('put').close[0]:
+            elif sec_price * sl_limit > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
-                self.stop_loss_wait_neutral = True
+                self.stop_loss_wait_reversal = True
                 self.order = self.close(data='put')
-            elif sec_price * 1.1 < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
+            elif sec_price * tp_floor < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Close Put on Target")
                 self.order = self.close(data='put')
 
@@ -128,7 +133,7 @@ class RSICall(StrategyWithLogging):
         self.order = None
         self.rsi_arr = []
         self.rsi_arr.append(self.rsi + 0.0)
-        self.stop_loss_wait_neutral = False
+        self.stop_loss_wait_reversal = False
 
     def next(self):
         self.rsi_arr.append(self.rsi + 0.0)
@@ -163,31 +168,31 @@ class RSICall(StrategyWithLogging):
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
-        if(self.stop_loss_wait_neutral == True):
+        if(self.stop_loss_wait_reversal == True):
             print("Waiting for neutral")
 
-        if self.rsi_arr[-1] >= 70:
-            if(self.stop_loss_wait_neutral == True):
+        if self.rsi_arr[-1] >= rsi_high:
+            if(self.stop_loss_wait_reversal == True):
                 print("Neutral Waiting Finished")
-            self.stop_loss_wait_neutral = False
+            self.stop_loss_wait_reversal = False
 
         if self.getpositionbyname('call').size <= 0:
-            if self.rsi_arr[-2]< 30 and self.rsi_arr[-1]> self.rsi_arr[-2]:
+            if self.rsi_arr[-2]< rsi_low and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Buy Call")
-                if self.stop_loss_wait_neutral == True:
+                if self.stop_loss_wait_reversal == True:
                     print("Hostile Condition, waiting until neutral")
                 else:
-                    self.order = self.buy(data='call', size=1, trailpercent = 7) # buy when closing price today crosses above MA.
+                    self.order = self.buy(data='call', size=ct_size) # buy when closing price today crosses above MA.
         else:
 
-            if ((self.rsi_arr[-1]> 70 - safe_padding or self.rsi_arr[-2] > 70 - safe_padding) and self.rsi_arr[-1]< self.rsi_arr[-2]):
+            if ((self.rsi_arr[-1]> rsi_high - safe_padding or self.rsi_arr[-2] > rsi_high - safe_padding) and self.rsi_arr[-1]< self.rsi_arr[-2]):
                 print("Close Call on RSI")
                 self.order = self.close(data='call')
-            elif sec_price * 0.91 > self.getdatabyname('call').close[0]:
+            elif sec_price * sl_limit > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
-                self.stop_loss_wait_neutral = True
+                self.stop_loss_wait_reversal = True
                 self.order = self.close(data='call')
-            elif sec_price * 1.1 < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
+            elif sec_price * tp_floor < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Close Call on Big Profit")
                 self.order = self.close(data='call')
 
@@ -197,9 +202,9 @@ def run(args=None):
     store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
-        timeframe=bt.TimeFrame.Minutes,
+        timeframe=trade_timeframe_type,
         compression=1,
-        rtbar=True,  # use RealTime 5 seconds bars
+        rtbar=use_rt_bar,  # use RealTime 5 seconds bars
         historical=backtest_glob,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
