@@ -10,7 +10,7 @@ import backtrader.feeds as btfeeds
 
 class StrategyWithLogging(bt.Strategy):
     start_time = None
-    close_time = None 
+    close_time = None
 
     # outputting information
     def log(self, txt):
@@ -30,6 +30,9 @@ class StrategyWithLogging(bt.Strategy):
 
     data_live = False
 
+    def notify_store(self, msg, *args, **kwargs):
+        print('STORE NOTIF:{}', msg)
+
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
         if status == data.LIVE:
@@ -39,7 +42,7 @@ class StrategyWithLogging(bt.Strategy):
 
             nytime_now = sgtz.localize(datetime.datetime.now()).astimezone(nytz)
             print(nytime_now)
-            self.start_time = nytime_now.replace(hour = 9, minute = 45, second = 0).replace(tzinfo=None)
+            self.start_time = nytime_now.replace(hour = 9, minute = 30, second = 0).replace(tzinfo=None)
             self.close_time = nytime_now.replace(hour = 15, minute = 55, second = 0).replace(tzinfo=None)
             print(self.close_time)
             print(self.start_time)
@@ -80,7 +83,6 @@ class StrategyWithLogging(bt.Strategy):
         self.cerebro.runstop()
 
     def have_position(self):
-        for k, v in self.positions.items():
-            if v.size != 0:
-                return True
-        return False
+        if self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0:
+            return False
+        return True
