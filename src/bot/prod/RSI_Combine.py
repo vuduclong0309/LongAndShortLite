@@ -91,7 +91,7 @@ class RSIPut(StrategyWithLogging):
         #print (self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0)
         #print (self.have_position())
 
-        if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
+        if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
@@ -108,6 +108,8 @@ class RSIPut(StrategyWithLogging):
             return
 
         if self.getpositionbyname('put').size <= 0:
+            if (last_close > price_ceiling or last_close < price_floor):
+                return
             if self.rsi_arr[-2]> rsi_high and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Buy Put")
                 if self.stop_loss_wait_reversal == True:
@@ -138,19 +140,14 @@ class RSICall(StrategyWithLogging):
     def next(self):
         self.rsi_arr.append(self.rsi + 0.0)
 
-        if backtest_glob == False:
-            if self.data_live == False:
-                return
-
         sec_price = self.getpositionbyname('call').price / p_factor
         last_close = self.getdatabyname('call').close[0]
         
         print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
-        
-        if self.order:
-            print("call order pending, returning")
-            return
 
+        if backtest_glob == False:
+            if self.data_live == False:
+                return
             bar_time = self.data.datetime.datetime(0)
 
             if(bar_time < self.start_time):
@@ -163,8 +160,12 @@ class RSICall(StrategyWithLogging):
                 eod = True
                 self.eod_flush_position()
                 return
+        
+        if self.order:
+            print("call order pending, returning")
+            return
 
-        if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
+        if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
@@ -177,6 +178,9 @@ class RSICall(StrategyWithLogging):
             self.stop_loss_wait_reversal = False
 
         if self.getpositionbyname('call').size <= 0:
+            if (last_close > price_ceiling or last_close < price_floor):
+                return 
+
             if self.rsi_arr[-2]< rsi_low and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Buy Call")
                 if self.stop_loss_wait_reversal == True:
