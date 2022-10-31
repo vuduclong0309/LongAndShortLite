@@ -36,6 +36,8 @@ from utils import *
 expdate_glob = ""
 strike_glob = ""
 
+stop_loss_wait_reversal = 0
+
 eod = False
 
 def updateGlobalVar(symbol):
@@ -57,9 +59,9 @@ class RSIPut(StrategyWithLogging):
         self.order = None
         self.rsi_arr = []
         self.rsi_arr.append(self.rsi + 0.0)
-        self.stop_loss_wait_reversal = False
 
     def next(self):
+        global stop_loss_wait_reversal
         print(self.cerebro.broker.getvalue())
 
         self.logdata()
@@ -69,6 +71,7 @@ class RSIPut(StrategyWithLogging):
         last_close = self.getdatabyname('put').close[0]
 
         print("rsi %s %s put %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
+        print(stop_loss_wait_reversal)
 
         if backtest_glob == False:
             if self.data_live == False:
@@ -91,26 +94,28 @@ class RSIPut(StrategyWithLogging):
         #print (self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0)
         #print (self.have_position())
 
-        if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
+        if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
-        if(self.stop_loss_wait_reversal == True):
+        if(stop_loss_wait_reversal == -1):
             print("Waiting for neutral")
 
         if self.rsi_arr[-1] <= rsi_low:
-            if(self.stop_loss_wait_reversal == True):
+            if(stop_loss_wait_reversal == -1):
                 print("Neutral Waiting Finished")
-            self.stop_loss_wait_reversal = False
+                stop_loss_wait_reversal = 0
 
         if self.order:
             print("pending order, returning")
             return
 
         if self.getpositionbyname('put').size <= 0:
+            if (last_close > price_ceiling or last_close < price_floor):
+                return
             if self.rsi_arr[-2]> rsi_high and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Buy Put")
-                if self.stop_loss_wait_reversal == True:
+                if stop_loss_wait_reversal == -1:
                     print("Hostile Condition, waiting until neutral")
                 else:
                     self.order = self.buy(data='put', size=ct_size) # buy when closing price today crosses above MA.
@@ -120,7 +125,7 @@ class RSIPut(StrategyWithLogging):
                 self.order = self.close(data='put')
             elif sec_price * sl_limit > self.getdatabyname('put').close[0]:
                 print("Close Put on Stop Loss")
-                self.stop_loss_wait_reversal = True
+                stop_loss_wait_reversal = -1
                 self.order = self.close(data='put')
             elif sec_price * tp_floor < self.getdatabyname('put').close[0] and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Close Put on Target")
@@ -133,24 +138,20 @@ class RSICall(StrategyWithLogging):
         self.order = None
         self.rsi_arr = []
         self.rsi_arr.append(self.rsi + 0.0)
-        self.stop_loss_wait_reversal = False
 
     def next(self):
+        global stop_loss_wait_reversal
         self.rsi_arr.append(self.rsi + 0.0)
-
-        if backtest_glob == False:
-            if self.data_live == False:
-                return
 
         sec_price = self.getpositionbyname('call').price / p_factor
         last_close = self.getdatabyname('call').close[0]
         
         print("rsi %s %s call %s price %s" % (str(self.rsi_arr[-1]), str(self.rsi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
-        
-        if self.order:
-            print("call order pending, returning")
-            return
+        print(stop_loss_wait_reversal)
 
+        if backtest_glob == False:
+            if self.data_live == False:
+                return
             bar_time = self.data.datetime.datetime(0)
 
             if(bar_time < self.start_time):
@@ -163,23 +164,30 @@ class RSICall(StrategyWithLogging):
                 eod = True
                 self.eod_flush_position()
                 return
+        
+        if self.order:
+            print("call order pending, returning")
+            return
 
-        if last_close > price_ceiling and not self.have_position() and backtest_glob == False:
+        if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
 
-        if(self.stop_loss_wait_reversal == True):
+        if(stop_loss_wait_reversal == 1):
             print("Waiting for neutral")
 
         if self.rsi_arr[-1] >= rsi_high:
-            if(self.stop_loss_wait_reversal == True):
+            if(stop_loss_wait_reversal == 1):
                 print("Neutral Waiting Finished")
-            self.stop_loss_wait_reversal = False
+                stop_loss_wait_reversal = 0
 
         if self.getpositionbyname('call').size <= 0:
+            if (last_close > price_ceiling or last_close < price_floor):
+                return 
+
             if self.rsi_arr[-2]< rsi_low and self.rsi_arr[-1]> self.rsi_arr[-2]:
                 print("Buy Call")
-                if self.stop_loss_wait_reversal == True:
+                if stop_loss_wait_reversal == 1:
                     print("Hostile Condition, waiting until neutral")
                 else:
                     self.order = self.buy(data='call', size=ct_size) # buy when closing price today crosses above MA.
@@ -190,7 +198,7 @@ class RSICall(StrategyWithLogging):
                 self.order = self.close(data='call')
             elif sec_price * sl_limit > self.getdatabyname('call').close[0]:
                 print("Close Call on Stop Loss")
-                self.stop_loss_wait_reversal = True
+                stop_loss_wait_reversal = 1
                 self.order = self.close(data='call')
             elif sec_price * tp_floor < self.getdatabyname('call').close[0] and self.rsi_arr[-1]< self.rsi_arr[-2]:
                 print("Close Call on Big Profit")
