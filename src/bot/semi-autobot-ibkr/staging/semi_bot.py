@@ -55,7 +55,10 @@ def updateGlobalVar(symbol):
 class RSICall(StrategyWithLogging):
     def next(self):
         self.logdata()
-        self.order = self.buy(data=buy_sec, size=ct_size) # buy when closing price today crosses above MA.
+        if(ct_size > 0):
+            self.order = self.buy(data=buy_sec, size=ct_size) # buy when closing price today crosses above MA.
+        else:
+            self.order = self.sell(data=buy_sec, size=abs(ct_size)) # buy when closing price today crosses above MA.
         self.cerebro.runstop()
 
 def run(cmd):
@@ -77,9 +80,15 @@ def run(cmd):
 
     datafeeds = [
         ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-        ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
-        ('call'     , "%s-%s-SMART-USD-%s-CALL"     % (symbol_glob, expdate_glob, str(strike_glob))     )
+        #('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        #('call'     , "%s-%s-SMART-USD-%s-CALL"     % (symbol_glob, expdate_glob, str(strike_glob))     )
     ]
+
+    if buy_sec == 'put':
+        datafeeds.append(('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ))
+    else:
+        datafeeds.append(('call'     , "%s-%s-SMART-USD-%s-CALL"     % (symbol_glob, expdate_glob, str(strike_glob))     ))
+ 
 
     for alias, full_sec_name in datafeeds:
         data = store.getdata(dataname = full_sec_name, **stockkwargs)
@@ -111,6 +120,7 @@ if __name__ == '__main__':
             updateGlobalVar(symbol_glob)
         else:
             if cmd == '1':
+                updateGlobalVar(symbol_glob)
                 buy_sec='call'
                 ct_size=1
                 run(cmd)
@@ -120,6 +130,7 @@ if __name__ == '__main__':
                 run(cmd)
             elif cmd == '3':
                 buy_sec='put'
+                updateGlobalVar(symbol_glob)
                 ct_size=1
                 run(cmd)
             elif cmd == '4':
