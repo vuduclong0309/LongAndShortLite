@@ -18,7 +18,7 @@ import yfinance as yf
 from config import *
 
 #Vars
-orderId = 2221
+orderId = 2221121221
 reqId = 1
 
 #Class for Interactive Brokers Connection
@@ -99,6 +99,10 @@ def bracketOrder(parentOrderId, action, quantity, opt_right):
     contract.strike = strike_glob
     contract.right = opt_right
     contract.multiplier = "100"
+    print("kk")
+    ib.reqContractDetails(1,contract)
+    print("kk")
+    ##ib.run()
    
     # Create Parent Order / Initial Entry
     parent = Order()
