@@ -100,9 +100,12 @@ class Bot:
         #self.ib.reqRealTimeBars(0, contract, 5, "TRADES", 1, [])
         self.ib.reqHistoricalData(self.reqId,contract,"","2 D",str(self.barsize)+mintext,"TRADES",1,1,True,[])
         print("ok")
+        
+
     #Listen to socket in seperate thread
     def run_loop(self):
         self.ib.run()
+        print("ok2")
     #Bracet Order Setup
     def bracketOrder(self, parentOrderId, action, quantity, profitTarget, stopLoss):
         #Initial Entry
@@ -144,7 +147,6 @@ class Bot:
     def on_bar_update(self, reqId, bar,realtime):
         print(bar)
         global orderId
-        print(orderId)
         #Historical Data to catch up
         if (realtime == False):
             self.bars.append(bar)
@@ -156,39 +158,7 @@ class Bot:
             #On Bar Close
             if (minutes_diff > 0 and math.floor(minutes_diff) % self.barsize == 0):
                 self.initialbartime = bartime
-                #Entry - If we have a higher high, a higher low and we cross the 50 SMA Buy
-                #1.) SMA
-                closes = []
-                for bar in self.bars:
-                    closes.append(bar.close)
-                self.close_array = pd.Series(np.asarray(closes))
-                self.sma = ta.trend.sma(self.close_array,self.smaPeriod,True)
-                print("SMA : " + str(self.sma[len(self.sma)-1]))
-                #2.) Calculate Higher Highs and Lows
-                lastLow = self.bars[len(self.bars)-1].low
-                lastHigh = self.bars[len(self.bars)-1].high
-                lastClose = self.bars[len(self.bars)-1].close
-
-                # Check Criteria
-                if (bar.close > lastHigh
-                    and self.currentBar.low > lastLow
-                    and bar.close > str(self.sma[len(self.sma)-1])
-                    and lastClose < str(self.sma[len(self.sma)-2])):
-                    #Bracket Order 2% Profit Target 1% Stop Loss
-                    profitTarget = bar.close*1.02
-                    stopLoss = bar.close*0.99
-                    quantity = 1
-                    bracket = self.bracketOrder(orderId,"BUY",quantity, profitTarget, stopLoss)
-                    contract = Contract()
-                    contract.symbol = self.symbol.upper()
-                    contract.secType = "STK"
-                    contract.exchange = "SMART"
-                    contract.currency = "USD"
-                    #Place Bracket Order
-                    for o in bracket:
-                        o.ocaGroup = "OCA_"+str(orderId)
-                        self.ib.placeOrder(o.orderId,contract,o)
-                    orderId += 3
+                
                 #Bar closed append
                 self.currentBar.close = bar.close
                 print("New bar!")
@@ -202,6 +172,24 @@ class Bot:
             self.currentBar.high = bar.high
         if (self.currentBar.low == 0 or bar.low < self.currentBar.low):
             self.currentBar.low = bar.low
+    
+    def purchase(self):
+            
+        #Bracket Order 2% Profit Target 1% Stop Loss
+        profitTarget = bars[-1].close*1.02
+        stopLoss = bars[-1].close*0.99
+        quantity = 1
+        bracket = self.bracketOrder(orderId,"BUY",quantity, profitTarget, stopLoss)
+        contract = Contract()
+        contract.symbol = self.symbol.upper()
+        contract.secType = "STK"
+        contract.exchange = "SMART"
+        contract.currency = "USD"
+        #Place Bracket Order
+        for o in bracket:
+            o.ocaGroup = "OCA_"+str(orderId)
+            self.ib.placeOrder(o.orderId,contract,o)
+        orderId += 3
 
 #Start Bot
 bot = Bot()
