@@ -25,10 +25,10 @@ def symToYF(symbol):
 
 def trimPrice(symbol, latest_price):
     tprice = int(latest_price)
-
+    
     if(symbol == "SPX"):
         tprice = tprice - tprice % 5
-
+    
     return tprice
 
 def updateGlobalVar(symbol, dtestep):
@@ -115,7 +115,7 @@ def run(optRight, ct_size, action):
     app = OrderApp(optRight, ct_size, action)
     app.nextOrderId = 0
 
-    app.connect("127.0.0.1", 7496, 0)
+    app.connect("127.0.0.1", 7497, 0)
 
 
     #app.reqContractDetails(1, contract)
