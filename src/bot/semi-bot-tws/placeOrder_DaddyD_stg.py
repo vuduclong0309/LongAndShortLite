@@ -18,6 +18,7 @@ dte = {
     "SPY": 2
     }
 
+
 def symToYF(symbol):
     if symbol == "SPX":
         return "^SPX"
@@ -130,6 +131,7 @@ if __name__ == "__main__":
     while(True):
         txt = """
             Enter command:
+            dte. Update Stock DTE
             0. Set Size
             1. Buy Call
             2. Buy Put
@@ -148,7 +150,11 @@ if __name__ == "__main__":
             run("C", ct_size, "SELL")
         elif cmd == '4':
             run("P", ct_size, "SELL")
-        elif cmd == "SPX" or cmd == "SPY":
+        elif cmd in dte.keys():
             symbol = cmd
+        elif cmd == "dte":
+            nsym = input("select ticker: ")
+            ndte = int(input("select dte step: "))
+            dte[nsym] = ndte
         elif cmd == '0':
             ct_size = int(input("select size:"))
