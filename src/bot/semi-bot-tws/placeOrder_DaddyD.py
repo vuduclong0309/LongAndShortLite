@@ -32,7 +32,7 @@ def updateGlobalVar(symbol, dtestep):
     strike_glob = 0
     stock = yf.Ticker(symToYF(symbol))
     latest_price = stock.history(period='2d', interval='1m')['Close'][-1]
-    basetime = stock.options[0].replace('-', '') # get 3-5dte date
+    basetime = stock.options[dtestep].replace('-', '') # get 3-5dte date
 
     expdate_glob = basetime
 
@@ -137,22 +137,27 @@ if __name__ == "__main__":
             4. Sell Put
             """
         print(txt)
-        cmd = input()
-        if cmd in ['0', '1', '2']:
-            updateGlobalVar(symbol, dte[symbol])
-        if cmd == '1':
-            run("C", ct_size, "BUY")
-        elif cmd == '2':
-            run("P", ct_size, "BUY")
-        elif cmd == '3':
-            run("C", ct_size, "SELL")
-        elif cmd == '4':
-            run("P", ct_size, "SELL")
-        elif cmd in dte.keys():
-            symbol = cmd
-        elif cmd == "dte":
-            nsym = input("select ticker: ")
-            ndte = int(input("select dte step: "))
-            dte[nsym] = ndte
-        elif cmd == '0':
-            ct_size = int(input("select size:"))
+        try:
+            cmd = input()
+            if cmd in ['0', '1', '2']:
+                updateGlobalVar(symbol, dte[symbol])
+            if cmd == '1':
+                run("C", ct_size, "BUY")
+            elif cmd == '2':
+                run("P", ct_size, "BUY")
+            elif cmd == '3':
+                run("C", ct_size, "SELL")
+            elif cmd == '4':
+                run("P", ct_size, "SELL")
+            elif cmd in dte.keys():
+                symbol = cmd
+            elif cmd == "dte":
+                print(dte)
+                nsym = input("select ticker: ")
+                ndte = int(input("select dte step: "))
+                dte[nsym] = ndte
+            elif cmd == '0':
+                ct_size = int(input("select size:"))
+        except Exception as e:
+            print(e)
+
