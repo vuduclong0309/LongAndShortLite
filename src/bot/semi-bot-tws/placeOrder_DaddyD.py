@@ -10,12 +10,14 @@ import yfinance as yf
 
 symbol = "SPY"
 expdate_glob = ""
-strike_glob = ""
+strike_glob = 0
 ct_size = 1
 
 dte = {
     "SPX": 0,
-    "SPY": 2
+    "SPY": 2,
+    "TSLA": 0,
+    "AAPL": 0
     }
 
 
@@ -24,23 +26,19 @@ def symToYF(symbol):
         return "^SPX"
     return symbol
 
-def trimPrice(symbol, latest_price):
-    tprice = int(latest_price)
-    
-    if(symbol == "SPX"):
-        tprice = tprice - tprice % 5
-    
-    return tprice
-
 def updateGlobalVar(symbol, dtestep):
     global expdate_glob
     global strike_glob
+    strike_glob = 0
     stock = yf.Ticker(symToYF(symbol))
     latest_price = stock.history(period='2d', interval='1m')['Close'][-1]
     basetime = stock.options[dtestep].replace('-', '') # get 3-5dte date
 
     expdate_glob = basetime
-    strike_glob = trimPrice(symbol, latest_price)
+
+    for strike in stock.option_chain().calls['strike']:
+        if(abs(strike - latest_price) < abs(strike_glob - latest_price)):
+            strike_glob = strike
 
     print("global var update: "  + symbol + " " + expdate_glob + " " + str(strike_glob))
     return
@@ -139,22 +137,27 @@ if __name__ == "__main__":
             4. Sell Put
             """
         print(txt)
-        cmd = input()
-        if cmd in ['0', '1', '2']:
-            updateGlobalVar(symbol, dte[symbol])
-        if cmd == '1':
-            run("C", ct_size, "BUY")
-        elif cmd == '2':
-            run("P", ct_size, "BUY")
-        elif cmd == '3':
-            run("C", ct_size, "SELL")
-        elif cmd == '4':
-            run("P", ct_size, "SELL")
-        elif cmd in dte.keys():
-            symbol = cmd
-        elif cmd == "dte":
-            nsym = input("select ticker: ")
-            ndte = int(input("select dte step: "))
-            dte[nsym] = ndte
-        elif cmd == '0':
-            ct_size = int(input("select size:"))
+        try:
+            cmd = input()
+            if cmd in ['0', '1', '2']:
+                updateGlobalVar(symbol, dte[symbol])
+            if cmd == '1':
+                run("C", ct_size, "BUY")
+            elif cmd == '2':
+                run("P", ct_size, "BUY")
+            elif cmd == '3':
+                run("C", ct_size, "SELL")
+            elif cmd == '4':
+                run("P", ct_size, "SELL")
+            elif cmd in dte.keys():
+                symbol = cmd
+            elif cmd == "dte":
+                print(dte)
+                nsym = input("select ticker: ")
+                ndte = int(input("select dte step: "))
+                dte[nsym] = ndte
+            elif cmd == '0':
+                ct_size = int(input("select size:"))
+        except Exception as e:
+            print(e)
+
