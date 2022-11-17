@@ -102,6 +102,9 @@ class OrderApp(EWrapper, EClient):
         order.action = self.action
         order.totalQuantity = self.quantity
         order.orderType = "MKT"
+        order.eTradeOnly = ''
+        order.firmQuoteOnly = ''
+
 
         self.placeOrder(self.nextOrderId, contract, order)
 
@@ -160,4 +163,3 @@ if __name__ == "__main__":
                 ct_size = int(input("select size:"))
         except Exception as e:
             print(e)
-
