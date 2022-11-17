@@ -26,14 +26,12 @@ def main():
     app.connect("127.0.0.1", 7497, 0)
 
     contract = Contract()
-    contract.symbol = "AAPL"
-    contract.secType = "STK"
-    contract.exchange = "SMART"
-    contract.currency = "USD"
-    contract.primaryExchange = "NASDAQ"
+    contract.symbol = "VOL-NYSE"
+    contract.secType = "IND"
+    contract.exchange = "NYSE"
 
     app.reqContractDetails(1, contract)
-    app.reqMarketDataType(4)
+    #app.reqMarketDataType(4)
     app.reqMktData(1, contract, "", False, False, [])
 
     app.run()

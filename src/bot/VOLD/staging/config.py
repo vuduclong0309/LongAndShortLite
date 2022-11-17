@@ -9,7 +9,7 @@ use_rt_bar = True
 
 # Trade parameters
 backtest_glob = False
-symbol_glob = "SPY"
+symbol_glob = "VOL-NYSE"
 trade_timeframe_type = bt.TimeFrame.Seconds
 trade_timeframe_compress = 15
 
