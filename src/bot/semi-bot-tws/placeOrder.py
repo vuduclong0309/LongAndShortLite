@@ -51,6 +51,8 @@ class OrderApp(EWrapper, EClient):
         order.totalQuantity = 10
         order.orderType = "LMT"
         order.lmtPrice = 210
+        order.eTradeOnly = ''
+        order.firmQuoteOnly = ''
 
         self.placeOrder(self.nextOrderId, contract, order)
 
