@@ -83,16 +83,18 @@ def run(args=None):
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
-        rtbar=False,  # use RealTime 5 seconds bars
-        historical=True,  # only historical download
+        rtbar=True,  # use RealTime 5 seconds bars
+        historical=False,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
+        backfill=False,
+        backfill_start=False,
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
-    data0 = store.getdata(dataname="VOL-NYSE-NYSE", **stockkwargs)
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
+    data0 = store.getdata(dataname="VOL-NYSE-IND-NYSE", **stockkwargs)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Seconds, compression=15)
     cerebro.run()
     cerebro.plot()
 
