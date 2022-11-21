@@ -10,8 +10,8 @@ use_rt_bar = True
 # Trade parameters
 backtest_glob = False
 symbol_glob = "SPY"
-trade_timeframe_type = bt.TimeFrame.Seconds
-trade_timeframe_compress = 15
+trade_timeframe_type = bt.TimeFrame.Minutes
+trade_timeframe_compress = 1
 
 price_ceiling = 6.5
 price_floor = 3.5

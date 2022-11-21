@@ -53,22 +53,45 @@ def updateGlobalVar(symbol):
     print("global var update: "  + symbol_glob + " " + expdate_glob + " " + str(strike_glob))
     return
 
+class dmiOsc(bt.Indicator):
+    lines = ('dmiOsc',)
+
+    def __init__(self):
+        dmi = bt.ind.DirectionalMovementIndex()
+        self.l.dmiOsc = dmi.DIplus - dmi.DIminus
+
+class dmiStoch(bt.Indicator):
+    lines = ('dmiStoch',)
+    params = (('dmiPeriod', 3), ('stochPeriod', 2),)
+
+    def __init__(self):
+        dmi = bt.ind.DirectionalMovementIndex()
+        dmiOsc = dmi.DIplus - dmi.DIminus
+
+        oscHighest = bt.ind.Highest(dmiOsc, period=self.p.dmiPeriod)
+        oscLowest = bt.ind.Lowest(dmiOsc, period=self.p.dmiPeriod)
+
+        self.l.dmiStoch = bt.ind.SumN(dmiOsc - oscLowest, period = self.p.stochPeriod) / bt.ind.SumN(oscHighest - oscLowest, period = self.p.stochPeriod)
+
 class RSIPut(StrategyWithLogging):
+    lines = ('dmiStoch',)
     def __init__(self):
         global dmiPeriod
         global stochPeriod
-        self.dmi = bt.ind.DirectionalMovementIndex()
-        self.dmiOsc = self.dmi.DIplus - self.dmi.DIminus
-        self.oscHighest = bt.ind.Highest(self.dmiOsc, period=dmiPeriod)
-        self.oscLowest = bt.ind.Lowest(self.dmiOsc, period=dmiPeriod)
-        self.dmiStoch = bt.ind.SumN(self.dmiOsc - self.oscLowest, period = stochPeriod) / bt.ind.SumN(self.oscHighest - self.oscLowest, period = stochPeriod)
+
+        self.dmiOsc = dmiOsc()
+        self.dmiStoch = dmiStoch(dmiPeriod = dmiPeriod, stochPeriod = stochPeriod)
+        
         self.order = None
 
     def next(self):
+        self.logdata()
         print(self.cerebro.broker.getvalue())
         print(self.dmiOsc + 0.0)
         print(self.dmiStoch + 0.0)
-        self.logdata()
+        if(len(self) == 480):
+            self.cerebro.runstop()
+        print("ok")
 
 
 
@@ -79,12 +102,12 @@ def run(args=None):
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=trade_timeframe_type,
-        compression=1,
+        compression=trade_timeframe_compress,
         rtbar=use_rt_bar,  # use RealTime 5 seconds bars
-        historical=False,  # only historical download
+        historical=True,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
-        backfill=False,
-        backfill_start=False,
+        preload=False,
+        live=False,
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
@@ -93,12 +116,12 @@ def run(args=None):
 
     datafeeds = [
         ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-        ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        #('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
     ]
 
     for alias, full_sec_name in datafeeds:
         data = store.getdata(dataname = full_sec_name, **stockkwargs)
-        cerebro.resampledata(data, timeframe = trade_timeframe_type, compression=trade_timeframe_compress)
+        #cerebro.resampledata(data, timeframe = trade_timeframe_type, compression=trade_timeframe_compress)
         cerebro.adddata(data, name=alias)
 
     cerebro.broker.setcash(1000)
@@ -112,7 +135,7 @@ def run(args=None):
 
     endval = cerebro.broker.getvalue()
 
-    #cerebro.plot()
+    cerebro.plot()
     print(stval)
     print(endval)
 
