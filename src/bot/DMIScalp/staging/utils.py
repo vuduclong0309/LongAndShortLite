@@ -30,12 +30,6 @@ class StrategyWithLogging(bt.Strategy):
 
     data_live = False
 
-    def prenext(self):
-        try:
-            self.next()
-        except Exception as e:
-            print(e)
-
     def notify_store(self, msg, *args, **kwargs):
         print('STORE NOTIF:{}', msg)
 

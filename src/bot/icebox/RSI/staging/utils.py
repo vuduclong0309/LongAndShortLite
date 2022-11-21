@@ -30,12 +30,6 @@ class StrategyWithLogging(bt.Strategy):
 
     data_live = False
 
-    def prenext(self):
-        try:
-            self.next()
-        except Exception as e:
-            print(e)
-
     def notify_store(self, msg, *args, **kwargs):
         print('STORE NOTIF:{}', msg)
 
@@ -48,7 +42,7 @@ class StrategyWithLogging(bt.Strategy):
 
             nytime_now = sgtz.localize(datetime.datetime.now()).astimezone(nytz)
             print(nytime_now)
-            self.start_time = nytime_now.replace(hour = 9, minute = 30, second = 0).replace(tzinfo=None)
+            self.start_time = nytime_now.replace(hour = 10, minute = 00, second = 0).replace(tzinfo=None)
             self.close_time = nytime_now.replace(hour = 15, minute = 55, second = 0).replace(tzinfo=None)
             print(self.close_time)
             print(self.start_time)
