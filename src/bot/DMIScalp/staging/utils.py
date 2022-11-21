@@ -78,11 +78,12 @@ class StrategyWithLogging(bt.Strategy):
         self.order = None
 
     def eod_flush_position(self):
-        self.close(data='put')
+        #self.close(data='put')
         self.close(data='call')
         self.cerebro.runstop()
 
     def have_position(self):
-        if self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0:
+        #if self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0:
+        if self.getpositionbyname('call').size <= 0:
             return False
         return True

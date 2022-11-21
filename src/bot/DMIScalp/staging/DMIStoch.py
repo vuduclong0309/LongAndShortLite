@@ -6,8 +6,8 @@
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# the Free Software Foundation, either vedmion 3 of the License, or
+# (at your option) any later vedmion.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -71,27 +71,90 @@ class dmiStoch(bt.Indicator):
         oscHighest = bt.ind.Highest(dmiOsc, period=self.p.dmiPeriod)
         oscLowest = bt.ind.Lowest(dmiOsc, period=self.p.dmiPeriod)
 
-        self.l.dmiStoch = bt.ind.SumN(dmiOsc - oscLowest, period = self.p.stochPeriod) / bt.ind.SumN(oscHighest - oscLowest, period = self.p.stochPeriod)
+        self.l.dmiStoch = bt.ind.SumN(dmiOsc - oscLowest, period = self.p.stochPeriod) / bt.ind.SumN(oscHighest - oscLowest, period = self.p.stochPeriod) * 100
 
-class RSIPut(StrategyWithLogging):
-    lines = ('dmiStoch',)
+class dmiStochCall(StrategyWithLogging):
     def __init__(self):
-        global dmiPeriod
-        global stochPeriod
-
-        self.dmiOsc = dmiOsc()
-        self.dmiStoch = dmiStoch(dmiPeriod = dmiPeriod, stochPeriod = stochPeriod)
-        
+        self.dmi = dmiStoch()
         self.order = None
+        self.dmi_arr = []
+        self.dmi_arr.append(self.dmi + 0.0)
 
     def next(self):
+        global stop_loss_wait_reversal
         self.logdata()
-        print(self.cerebro.broker.getvalue())
-        print(self.dmiOsc + 0.0)
-        print(self.dmiStoch + 0.0)
-        if(len(self) == 480):
+        print(self.broker.getvalue())
+        self.dmi_arr.append(self.dmi + 0.0)
+
+        sec_price = self.getpositionbyname('call').price / p_factor
+        last_close = self.getdatabyname('call').close[0]
+        
+        print("dmi %s %s call %s price %s" % (str(self.dmi_arr[-1]), str(self.dmi_arr[-2]), self.getdatabyname('call').close[0], sec_price))
+        print(stop_loss_wait_reversal)
+
+        if backtest_glob == False:
+            if self.data_live == False:
+                return
+            bar_time = self.data.datetime.datetime(0)
+
+            if(bar_time < self.start_time):
+                print("Not in trading time yet")
+                return
+
+            if(bar_time > self.close_time):
+                print("Closing Position EOD")
+                global eod
+                eod = True
+                self.eod_flush_position()
+                return
+        
+        if self.order:
+            print("call order pending, returning")
+            return
+
+        if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
+            print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
-        print("ok")
+
+        if(stop_loss_wait_reversal == 1):
+            print("Waiting for neutral")
+
+        if self.dmi_arr[-1] >= dmi_high:
+            if(stop_loss_wait_reversal == 1):
+                print("Neutral Waiting Finished")
+                stop_loss_wait_reversal = 0
+
+        print(self.getpositionbyname('call').size)
+        print(dmi_low)
+        print(self.dmi_arr[-2]< dmi_low)
+        print(self.dmi_arr[-1]> self.dmi_arr[-2])
+        if self.getpositionbyname('call').size <= 0:
+            print("ok1")
+            #if (last_close > price_ceiling or last_close < price_floor):
+            #    return 
+            try:
+                print((self.dmi_arr[-2]< dmi_low) and (self.dmi_arr[-1]> self.dmi_arr[-2]))
+            except Exception as e:
+                print (e)
+            print("ok2")
+            if self.dmi_arr[-2]< dmi_low and self.dmi_arr[-1]> self.dmi_arr[-2]:
+                print("Buy Call")
+                if stop_loss_wait_reversal == 1:
+                    print("Hostile Condition, waiting until neutral")
+                else:
+                    self.order = self.buy(data='call', size=ct_size) # buy when closing price today crosses above MA.
+        else:
+            print("hvaing")
+            if ((self.dmi_arr[-1]> dmi_high - safe_padding or self.dmi_arr[-2] > dmi_high - safe_padding) and self.dmi_arr[-1]< self.dmi_arr[-2]):
+                print("Close Call on dmi")
+                self.order = self.close(data='call')
+            elif sec_price * sl_limit > self.getdatabyname('call').close[0]:
+                print("Close Call on Stop Loss")
+                stop_loss_wait_reversal = 1
+                self.order = self.close(data='call')
+            elif sec_price * tp_floor < self.getdatabyname('call').close[0] and self.dmi_arr[-1]< self.dmi_arr[-2]:
+                print("Close Call on Big Profit")
+                self.order = self.close(data='call')
 
 
 
@@ -116,7 +179,7 @@ def run(args=None):
 
     datafeeds = [
         ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-        #('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('call'      , "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
     ]
 
     for alias, full_sec_name in datafeeds:
@@ -130,7 +193,7 @@ def run(args=None):
     if backtest_glob == False:
         cerebro.broker = store.getbroker()
 
-    cerebro.addstrategy(RSIPut)
+    cerebro.addstrategy(dmiStochCall)
     cerebro.run()
 
     endval = cerebro.broker.getvalue()
