@@ -4,17 +4,17 @@ import backtrader.feeds as btfeeds
 
 #IBKR Client parameters
 port_conf=7497
-p_factor = 1  # IBKR simul broker has option price *100, thus need to divide by 100 to make price back to normal
+p_factor = 100  # IBKR simul broker has option price *100, thus need to divide by 100 to make price back to normal
 use_rt_bar = True
 
 # Trade parameters
-backtest_glob = True
+backtest_glob = False
 symbol_glob = "SPY"
 trade_timeframe_type = bt.TimeFrame.Minutes
 trade_timeframe_compress = 1
 
-price_ceiling = 6.5
-price_floor = 3.5
+price_ceiling = 15
+price_floor = 0
 
 dmi_low = 10
 dmi_high = 90

@@ -71,7 +71,7 @@ class dmiStoch(bt.Indicator):
         oscHighest = bt.ind.Highest(dmiOsc, period=self.p.dmiPeriod)
         oscLowest = bt.ind.Lowest(dmiOsc, period=self.p.dmiPeriod)
 
-        self.l.dmiStoch = bt.ind.SumN(dmiOsc - oscLowest, period = self.p.stochPeriod) / bt.ind.SumN(oscHighest - oscLowest, period = self.p.stochPeriod) * 100
+        self.l.dmiStoch = bt.DivByZero(bt.ind.SumN(dmiOsc - oscLowest, period = self.p.stochPeriod) , bt.ind.SumN(oscHighest - oscLowest, period = self.p.stochPeriod) , 1) * 100
 
 class dmiStochCall(StrategyWithLogging):
     def __init__(self):
@@ -125,18 +125,14 @@ class dmiStochCall(StrategyWithLogging):
                 stop_loss_wait_reversal = 0
 
         print(self.getpositionbyname('call').size)
-        print(dmi_low)
-        print(self.dmi_arr[-2]< dmi_low)
-        print(self.dmi_arr[-1]> self.dmi_arr[-2])
         if self.getpositionbyname('call').size <= 0:
-            print("ok1")
             #if (last_close > price_ceiling or last_close < price_floor):
             #    return 
             try:
                 print((self.dmi_arr[-2]< dmi_low) and (self.dmi_arr[-1]> self.dmi_arr[-2]))
             except Exception as e:
                 print (e)
-            print("ok2")
+
             if self.dmi_arr[-2]< dmi_low and self.dmi_arr[-1]> self.dmi_arr[-2]:
                 print("Buy Call")
                 if stop_loss_wait_reversal == 1:
@@ -144,7 +140,6 @@ class dmiStochCall(StrategyWithLogging):
                 else:
                     self.order = self.buy(data='call', size=ct_size) # buy when closing price today crosses above MA.
         else:
-            print("hvaing")
             if ((self.dmi_arr[-1]> dmi_high - safe_padding or self.dmi_arr[-2] > dmi_high - safe_padding) and self.dmi_arr[-1]< self.dmi_arr[-2]):
                 print("Close Call on dmi")
                 self.order = self.close(data='call')
@@ -157,17 +152,16 @@ class dmiStochCall(StrategyWithLogging):
                 self.order = self.close(data='call')
 
 
-
 def run(args=None):
     updateGlobalVar(symbol_glob)
     cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
-        timeframe=trade_timeframe_type,
-        compression=trade_timeframe_compress,
-        rtbar=use_rt_bar,  # use RealTime 5 seconds bars
-        historical=True,  # only historical download
+        timeframe=bt.TimeFrame.Seconds,
+        compression=5,
+        rtbar=True,  # use RealTime 5 seconds bars
+        historical=False,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         preload=False,
         live=False,
@@ -184,7 +178,7 @@ def run(args=None):
 
     for alias, full_sec_name in datafeeds:
         data = store.getdata(dataname = full_sec_name, **stockkwargs)
-        #cerebro.resampledata(data, timeframe = trade_timeframe_type, compression=trade_timeframe_compress)
+        cerebro.resampledata(data, timeframe = bt.TimeFrame.Seconds, compression=30)
         cerebro.adddata(data, name=alias)
 
     cerebro.broker.setcash(1000)
