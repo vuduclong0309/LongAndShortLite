@@ -48,14 +48,18 @@ def symToYF(symbol):
 def updateGlobalVar(symbol):
     global expdate_glob
     global strike_glob
+    strike_glob = 0
     stock = yf.Ticker(symToYF(symbol))
-    latest_price = stock.history(period='1d', interval='1m')['Close'][-1]
-    basetime = stock.options[2].replace('-', '') # get 3-5dte date
+    latest_price = stock.history(period='2d', interval='1m')['Close'][-1]
+    basetime = stock.options[0].replace('-', '') # get 3-5dte date
 
     expdate_glob = basetime
-    strike_glob = int(latest_price)
 
-    print("global var update: "  + symbol_glob + " " + expdate_glob + " " + str(strike_glob))
+    for strike in stock.option_chain().calls['strike']:
+        if(abs(strike - latest_price) < abs(strike_glob - latest_price)):
+            strike_glob = strike
+
+    print("global var update: "  + symbol + " " + expdate_glob + " " + str(strike_glob))
     return
 
 class dmiOsc(bt.Indicator):
@@ -243,20 +247,24 @@ def run(args=None):
         qcheck=0.5,  # timeout in seconds (float) to check for events
         preload=False,
         live=False,
+        backfill = False,
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
-        tradename=None,  # use a different asset as order target
     )
 
     datafeeds = [
-        ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-        ('call'      , "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
-        ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        #('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
+        ('stock'    , "SPY-STK-SMART-USD", "SPY-STK-SMART-USD"                                                                 ),
+        ('call'     , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('put'      , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        #('call'      , "SPX-20221123-SMART-USD-4000-CALL"),
+        #('put'       , "SPX-20221123-SMART-USD-4000-PUT"),
     ]
 
-    for alias, full_sec_name in datafeeds:
-        data = store.getdata(dataname = full_sec_name, **stockkwargs)
+    for alias, full_sec_name, trade_name in datafeeds:
+        data = store.getdata(dataname = full_sec_name, tradename = trade_name, **stockkwargs)
+        print(full_sec_name)
         cerebro.resampledata(data, timeframe = bt.TimeFrame.Seconds, compression=30)
         cerebro.adddata(data, name=alias)
 
