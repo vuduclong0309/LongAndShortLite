@@ -40,11 +40,16 @@ stop_loss_wait_reversal = 0
 
 eod = False
 
+def symToYF(symbol):
+    if symbol == "SPX":
+        return "^SPX"
+    return symbol
+
 def updateGlobalVar(symbol):
     global expdate_glob
     global strike_glob
-    stock = yf.Ticker(symbol)
-    latest_price = stock.history(period='0d', interval='1m')['Close'][-1]
+    stock = yf.Ticker(symToYF(symbol))
+    latest_price = stock.history(period='1d', interval='1m')['Close'][-1]
     basetime = stock.options[2].replace('-', '') # get 3-5dte date
 
     expdate_glob = basetime
@@ -72,6 +77,80 @@ class dmiStoch(bt.Indicator):
         oscLowest = bt.ind.Lowest(dmiOsc, period=self.p.dmiPeriod)
 
         self.l.dmiStoch = bt.DivByZero(bt.ind.SumN(dmiOsc - oscLowest, period = self.p.stochPeriod) , bt.ind.SumN(oscHighest - oscLowest, period = self.p.stochPeriod) , 1) * 100
+
+class dmiStochPut(StrategyWithLogging):
+    def __init__(self):
+        self.dmi = dmiStoch()
+        self.order = None
+        self.dmi_arr = []
+        self.dmi_arr.append(self.dmi + 0.0)
+
+    def next(self):
+        global stop_loss_wait_reversal
+        print(self.cerebro.broker.getvalue())
+
+        self.logdata()
+        self.dmi_arr.append(self.dmi + 0.0)
+
+        sec_price = self.getpositionbyname('put').price / p_factor
+        last_close = self.getdatabyname('put').close[0]
+
+        print("dmi %s %s put %s price %s" % (str(self.dmi_arr[-1]), str(self.dmi_arr[-2]), self.getdatabyname('put').close[0], sec_price))
+        print(stop_loss_wait_reversal)
+
+        if backtest_glob == False:
+            if self.data_live == False:
+                return
+
+            bar_time = self.data.datetime.datetime(0)
+
+            if(bar_time < self.start_time):
+                print("Not in trading time yet")
+                return
+
+            if(bar_time > self.close_time):
+                print("Closing Position EOD")
+                global eod
+                eod = True
+                self.eod_flush_position()
+                return
+
+        if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
+            print("Price trade deviated, exiting and recalibrate")
+            self.cerebro.runstop()
+
+        if(stop_loss_wait_reversal == -1):
+            print("Waiting for neutral")
+
+        if self.dmi_arr[-1] <= dmi_low:
+            if(stop_loss_wait_reversal == -1):
+                print("Neutral Waiting Finished")
+                stop_loss_wait_reversal = 0
+
+        if self.order:
+            print("pending order, returning")
+            return
+
+        if self.getpositionbyname('put').size <= 0:
+            if (last_close > price_ceiling or last_close < price_floor):
+                return
+            if self.dmi_arr[-2]> dmi_high and self.dmi_arr[-1]< self.dmi_arr[-2]:
+                print("Buy Put")
+                if stop_loss_wait_reversal == -1:
+                    print("Hostile Condition, waiting until neutral")
+                else:
+                    self.order = self.buy(data='put', size=ct_size) # buy when closing price today crosses above MA.
+        else:
+            if ((self.dmi_arr[-1]< dmi_low + safe_padding or self.dmi_arr[-2] < dmi_low + safe_padding) and self.dmi_arr[-1]> self.dmi_arr[-2]):
+                print("Close Put on dmi")
+                self.order = self.close(data='put')
+            elif sec_price * sl_limit > self.getdatabyname('put').close[0]:
+                print("Close Put on Stop Loss")
+                stop_loss_wait_reversal = -1
+                self.order = self.close(data='put')
+            elif sec_price * tp_floor < self.getdatabyname('put').close[0] and self.dmi_arr[-1]> self.dmi_arr[-2]:
+                print("Close Put on Target")
+                self.order = self.close(data='put')
 
 class dmiStochCall(StrategyWithLogging):
     def __init__(self):
@@ -151,7 +230,6 @@ class dmiStochCall(StrategyWithLogging):
                 print("Close Call on Big Profit")
                 self.order = self.close(data='call')
 
-
 def run(args=None):
     updateGlobalVar(symbol_glob)
     cerebro = bt.Cerebro()
@@ -174,6 +252,7 @@ def run(args=None):
     datafeeds = [
         ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
         ('call'      , "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
     ]
 
     for alias, full_sec_name in datafeeds:
@@ -188,6 +267,7 @@ def run(args=None):
         cerebro.broker = store.getbroker()
 
     cerebro.addstrategy(dmiStochCall)
+    cerebro.addstrategy(dmiStochPut)
     cerebro.run()
 
     endval = cerebro.broker.getvalue()
