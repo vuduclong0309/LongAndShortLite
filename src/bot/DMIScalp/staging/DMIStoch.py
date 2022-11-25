@@ -135,6 +135,7 @@ class dmiStochPut(StrategyWithLogging):
             print("pending order, returning")
             return
 
+        print (self.getpositionbyname('put'))
         if self.getpositionbyname('put').size <= 0:
             if (last_close > price_ceiling or last_close < price_floor):
                 return
@@ -207,7 +208,7 @@ class dmiStochCall(StrategyWithLogging):
                 print("Neutral Waiting Finished")
                 stop_loss_wait_reversal = 0
 
-        print(self.getpositionbyname('call').size)
+        print(self.getpositionbyname('call'))
         if self.getpositionbyname('call').size <= 0:
             #if (last_close > price_ceiling or last_close < price_floor):
             #    return 
@@ -241,30 +242,45 @@ def run(args=None):
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Seconds,
-        compression=5,
+        compression=30,
         rtbar=True,  # use RealTime 5 seconds bars
         historical=False,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
         preload=False,
         live=False,
-        backfill = False,
+
         #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
         #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
     )
 
+    #datafeeds = [
+    #    #('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
+    #    ('stock'    , "SPY-STK-SMART-USD", "SPY-STK-SMART-USD"                                                                 ),
+    #    ('call'     , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+    #    ('put'      , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+    #    #('call'      , "SPX-20221123-SMART-USD-4000-CALL"),
+    #    #('put'       , "SPX-20221123-SMART-USD-4000-PUT"),
+    #]
+
+    #for alias, full_sec_name, trade_name in datafeeds:
+    #    data = store.getdata(dataname = full_sec_name, tradename = trade_name, **stockkwargs)
+    #    print(full_sec_name)
+    #    cerebro.resampledata(data, timeframe = bt.TimeFrame.Seconds, compression=5)
+    #    cerebro.adddata(data, name=alias)
+
     datafeeds = [
         #('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-        ('stock'    , "SPY-STK-SMART-USD", "SPY-STK-SMART-USD"                                                                 ),
-        ('call'     , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
-        ('put'      , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('stock'    , "SPY-STK-SMART-USD"                                                                 ),
+        ('call'     , "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
         #('call'      , "SPX-20221123-SMART-USD-4000-CALL"),
         #('put'       , "SPX-20221123-SMART-USD-4000-PUT"),
     ]
 
-    for alias, full_sec_name, trade_name in datafeeds:
-        data = store.getdata(dataname = full_sec_name, tradename = trade_name, **stockkwargs)
-        print(full_sec_name)
+
+    for alias, full_sec_name in datafeeds:
+        data = store.getdata(dataname = full_sec_name, **stockkwargs)
         cerebro.resampledata(data, timeframe = bt.TimeFrame.Seconds, compression=30)
         cerebro.adddata(data, name=alias)
 
