@@ -9,12 +9,13 @@ use_rt_bar = True
 
 # Trade parameters
 backtest_glob = False
-symbol_glob = "SPX"
-trade_timeframe_type = bt.TimeFrame.Minutes
-trade_timeframe_compress = 1
+symbol_glob = "SPY"
+dtestep_glob = 0
+trade_timeframe_type = bt.TimeFrame.Seconds
+trade_timeframe_compress = 30
 
-price_ceiling = 1566
-price_floor = 0
+price_ceiling = 12.0
+price_floor = 2.0
 
 dmi_low = 10
 dmi_high = 90
