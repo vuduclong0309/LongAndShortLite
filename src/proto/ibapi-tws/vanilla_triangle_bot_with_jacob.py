@@ -1,3 +1,26 @@
+# -*- coding: utf-8 -*-
+
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: Jacob Amaral
+        @Links: https://www.youtube.com/watch?v=XKbk8SY9LD0
+
+This module demonstrates an example of a trading bot using Interactive Broker,
+by going through Jacob Amaral's Youtube, for reference please access the video link reference above
+
+Before running this bot, please go through documentation guide: "TWS Environment Setup"
+
+This code is standalone, an example of running this bot through terminal
+        $ python vanilla_triangle_bot_with_jacob.py    
+
+This bot connects to default InteractiveBroker's TraderWorkstation paper account port 7497
+You can switch to 7496 in the following code to use in real trading AT YOUR OWN RISK. 
+        self.ib.connect("127.0.0.1", 7497,1)
+
+The author only used this to get the hang of TWS API
+"""
 #Imports
 import ibapi
 from ibapi.client import EClient
@@ -12,32 +35,39 @@ import math
 from datetime import datetime, timedelta
 import threading
 import time
-#Vars
+
+# Vars
 orderId = 1
-#Class for Interactive Brokers Connection
+
+# Interactive Brokers Client / Wrapper, please refer to TWS API documentation quick start if you are new
 class IBApi(EWrapper,EClient):
     def __init__(self):
         EClient.__init__(self, self)
-    # Historical Backtest Data
+
+    # Called when a historical data instance is passed
     def historicalData(self, reqId, bar):
         try:
             bot.on_bar_update(reqId,bar,False)
         except Exception as e:
             print(e)
-    # On Realtime Bar after historical data finishes
+
+    # Called on the last historical data bar, before changed to real time bar
+    def historicalDataEnd(self, reqId, start, end):
+        print(reqId)
+
+    # Called when there is any change to historical data
     def historicalDataUpdate(self, reqId, bar):
         try:
             bot.on_bar_update(reqId,bar,True)
         except Exception as e:
             print(e)
-    # On Historical Data End
-    def historicalDataEnd(self, reqId, start, end):
-        print(reqId)
-    # Get next order id we can use
+
+    # Get next valid orderId for order creation
     def nextValidId(self, nextorderId):
         global orderId
         orderId = nextorderId
-    # Listen for realtime bars
+
+    # Called when a new data instance get passed
     def realtimeBar(self, reqId, time, open_, high, low, close,volume, wap, count):
         super().realtimeBar(reqId, time, open_, high, low, close, volume, wap, count)
         try:
@@ -47,7 +77,8 @@ class IBApi(EWrapper,EClient):
     def error(self, id, errorCode, errorMsg):
         print(errorCode)
         print(errorMsg)
-#Bar Object
+
+# Represent 1 OHLC candlestick bar
 class Bar:
     open = 0
     low = 0
@@ -62,7 +93,7 @@ class Bar:
         self.close = 0
         self.volume = 0
         self.date = datetime.now()
-#Bot Logic
+
 class Bot:
     ib = None
     barsize = 1
@@ -73,6 +104,7 @@ class Bot:
     smaPeriod = 50
     symbol = ""
     initialbartime = datetime.now().astimezone(pytz.timezone("America/New_York"))
+
     def __init__(self):
         #Connect to IB on init
         self.ib = IBApi()
