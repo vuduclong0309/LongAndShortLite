@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; py-indent-offset:4 -*-
-# python ibtest.py --port 7497 --qcheck 2 --reconnect 3 --data0 EUR.USD-CASH-IDEALPRO --timeframe Seconds --compression 10
+
 ###############################################################################
 #
 # Copyright (C) 2015-2020 Daniel Rodriguez
@@ -19,6 +19,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Credit: Backtrader
+        @Links: https://github.com/mementum/backtrader/blob/master/samples/ibtest/ibtest.py
+
+Author Note:
+This module is retrieved from original backtrader repo.
+This can be considered as a compact demonstration of backtrader full functionality.
+
+An example to run this script for pair trading EUR-USD at 10 second timeframe:
+    $ python ibtest.py --port 7497 --qcheck 2 --reconnect 3 --data0 EUR.USD-CASH-IDEALPRO --timeframe Seconds --compression 10
+
+To accquire more details, please visit Backtrader forum
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 

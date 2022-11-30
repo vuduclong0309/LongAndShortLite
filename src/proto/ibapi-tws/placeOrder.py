@@ -1,3 +1,34 @@
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#
+# Copyright (C) 2022 Duc Long Vu
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: TraderAcademy by InteractiveBroker
+        @Links: https://tradersacademy.online/trading-lesson/python-placing-orders
+
+This module is the real code module using in TraderAcademy lesson on TWS API on how to place order through TWS API
+I just write this according to the video, since I can't find the code anywhere else
+"""
+
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract

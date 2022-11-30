@@ -87,7 +87,6 @@ class StochRSI(bt.Strategy):
             self.order = None
 
 def run(args=None):
-
     cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
@@ -101,7 +100,7 @@ def run(args=None):
         tradename=None  # use a different asset as order target
     )
     data0 = store.getdata(dataname="SPY-STK-SMART-USD", **stockkwargs)
-    data1 = store.getdata(dataname="SPY-20221014-SMART-USD-366-PUT", **stockkwargs)
+    data1 = store.getdata(dataname="SPY-20221201-SMART-USD-366-CALL", **stockkwargs)
     cerebro.adddata(data0, name='d0')
     cerebro.adddata(data1, name='d1')
     #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=3)
