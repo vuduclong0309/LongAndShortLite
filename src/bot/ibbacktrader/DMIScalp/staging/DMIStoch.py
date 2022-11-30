@@ -45,13 +45,13 @@ def symToYF(symbol):
         return "^SPX"
     return symbol
 
-def updateGlobalVar(symbol):
+def updateGlobalVar(symbol, dtestep):
     global expdate_glob
     global strike_glob
     strike_glob = 0
     stock = yf.Ticker(symToYF(symbol))
     latest_price = stock.history(period='2d', interval='1m')['Close'][-1]
-    basetime = stock.options[0].replace('-', '') # get 3-5dte date
+    basetime = stock.options[dtestep].replace('-', '') # get 3-5dte date
 
     expdate_glob = basetime
 
@@ -210,8 +210,8 @@ class dmiStochCall(StrategyWithLogging):
 
         print(self.getpositionbyname('call'))
         if self.getpositionbyname('call').size <= 0:
-            #if (last_close > price_ceiling or last_close < price_floor):
-            #    return 
+            if (last_close > price_ceiling or last_close < price_floor):
+                return 
             try:
                 print((self.dmi_arr[-2]< dmi_low) and (self.dmi_arr[-1]> self.dmi_arr[-2]))
             except Exception as e:
@@ -236,13 +236,13 @@ class dmiStochCall(StrategyWithLogging):
                 self.order = self.close(data='call')
 
 def run(args=None):
-    updateGlobalVar(symbol_glob)
+    updateGlobalVar(symbol_glob, dtestep_glob)
     cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=port_conf)
     #store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
-        timeframe=bt.TimeFrame.Seconds,
-        compression=30,
+        timeframe=trade_timeframe_type,
+        compression=trade_timeframe_compress,
         rtbar=True,  # use RealTime 5 seconds bars
         historical=False,  # only historical download
         qcheck=0.5,  # timeout in seconds (float) to check for events
@@ -281,7 +281,7 @@ def run(args=None):
 
     for alias, full_sec_name in datafeeds:
         data = store.getdata(dataname = full_sec_name, **stockkwargs)
-        cerebro.resampledata(data, timeframe = bt.TimeFrame.Seconds, compression=30)
+        cerebro.resampledata(data, timeframe = trade_timeframe_type, compression=trade_timeframe_compress)
         cerebro.adddata(data, name=alias)
 
     cerebro.broker.setcash(1000)
@@ -296,7 +296,6 @@ def run(args=None):
 
     endval = cerebro.broker.getvalue()
 
-    cerebro.plot()
     print(stval)
     print(endval)
 
