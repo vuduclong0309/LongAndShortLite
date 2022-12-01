@@ -1,3 +1,32 @@
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#
+# Copyright (C) 2022 Duc Long Vu
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+
+This is a helper tool to place at the money option order rapidly
+Especially helpful for manually play based on trade signal
+"""
+
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
@@ -7,6 +36,13 @@ from ibapi.order import *
 from threading import Timer
 
 import yfinance as yf
+
+ENV = "prod"
+
+port = {
+    "staging": 7497,
+    "prod": 7496
+    }
 
 symbol = "SPY"
 expdate_glob = ""
@@ -40,7 +76,10 @@ def updateGlobalVar(symbol, dtestep):
         if(abs(strike - latest_price) < abs(strike_glob - latest_price)):
             strike_glob = strike
 
-    print("global var update: "  + symbol + " " + expdate_glob + " " + str(strike_glob))
+    print("Option Info: "  + symbol + " " + expdate_glob + " " + str(strike_glob))
+
+    for i in range(6):
+        print("dtestep = " + str(i) + "expdate: " + stock.options[i].replace('-', ''))
     return
 
 class OrderApp(EWrapper, EClient):
@@ -130,8 +169,11 @@ def run(optRight, ct_size, action):
 
 if __name__ == "__main__":
     while(True):
+        print("ENV: " + ENV)
+        updateGlobalVar(symbol, dte[symbol])
         txt = """
-            Enter command:
+            Enter command: [TickerName | dte | [0-4] ]
+            TickerName. (e.g SPX) Change Underlying Security 
             dte. Update Stock DTE
             0. Set Size
             1. Buy Call
@@ -142,8 +184,7 @@ if __name__ == "__main__":
         print(txt)
         try:
             cmd = input()
-            if cmd in ['0', '1', '2']:
-                updateGlobalVar(symbol, dte[symbol])
+                
             if cmd == '1':
                 run("C", ct_size, "BUY")
             elif cmd == '2':
@@ -156,9 +197,8 @@ if __name__ == "__main__":
                 symbol = cmd
             elif cmd == "dte":
                 print(dte)
-                nsym = input("select ticker: ")
                 ndte = int(input("select dte step: "))
-                dte[nsym] = ndte
+                dte[symbol] = ndte
             elif cmd == '0':
                 ct_size = int(input("select size:"))
         except Exception as e:

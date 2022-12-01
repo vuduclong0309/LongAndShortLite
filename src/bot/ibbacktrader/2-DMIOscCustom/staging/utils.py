@@ -8,6 +8,11 @@ import backtrader as bt
 import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
+def symToYF(symbol):
+    if symbol == "SPX":
+        return "^SPX"
+    return symbol
+
 class StrategyWithLogging(bt.Strategy):
     start_time = None
     close_time = None
