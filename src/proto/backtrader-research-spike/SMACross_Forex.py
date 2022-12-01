@@ -1,3 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset:4 -*-
+###############################################################################
+#
+# Copyright (C) 2018 Daniel Rodriguez
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+"""
+        @Credit: Backtrader
+        @Links: https://www.backtrader.com/home/helloalgotrading/
+"""
+
+
 from datetime import datetime
 import backtrader as bt
 import time
@@ -55,31 +82,32 @@ class SmaCross(bt.Strategy):
         print(self.position)
         self.crossover
 
-        if not self.position:  # not in the market            
+        if not self.position:  # not in the market
             if self.crossover > 0:  # if fast crosses slow to the upside
                 self.buy()  # enter long
 
         elif self.crossover < 0:  # in the market & cross to the downside
             self.close()  # close long position
 
-
 cerebro = bt.Cerebro(stdstats=False)
 store = bt.stores.IBStore(port=7497)
 stockkwargs = dict(
     timeframe=bt.TimeFrame.Minutes,
-    rtbar=True,  # use RealTime 5 seconds bars
-    historical=False,  # only historical download
+    rtbar=False,  # use RealTime 5 seconds bars
+    historical=True,  # only historical download
     qcheck=0.5,  # timeout in seconds (float) to check for events
     #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
     #todate=datetime.datetime(2022, 9, 25),  # get data from..
     latethrough=False,  # let late samples through
     tradename=None  # use a different asset as order target
 )
-data0 = store.getdata(dataname="GME-STK-SMART-USD", **stockkwargs)
+data0 = store.getdata(dataname="EUR.USD-CASH-IDEALPRO", **stockkwargs)
 cerebro.resampledata(data0, timeframe=bt.TimeFrame.Seconds, compression=5)
 
 cerebro.broker = store.getbroker()
 
 cerebro.addstrategy(SmaCross)
+print(cerebro.broker.value)
 cerebro.run()
-cerebro.plot()
+print(cerebro.broker.value)
+#cerebro.plot(style='candlestick',loc='grey', grid=False) #You can leave inside the paranthesis empty

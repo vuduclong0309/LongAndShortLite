@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset:4 -*-
+# -*- coding: utf-8 -*-
+
 ###############################################################################
 #
-# Copyright (C) 2018 Daniel Rodriguez
+# Copyright (C) 2022 Duc Long Vu
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: ?
+
+A simple trading bot based on RSI_SMA indicator
+Honestly I'm not sure if I wrote this or copied from someone else, but this is the skeleton file for me to build my real trading bot
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -28,12 +38,15 @@ import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
 
-class SmaCross(bt.Strategy):
-    # list of parameters which are configurable for the strategy
-    params = dict(
-        pfast=10,  # period for the fast moving average
-        pslow=30   # period for the slow moving average
-    )
+class StochRSI(bt.Strategy):
+
+    def __init__(self):
+        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
+        
+    # outputting information
+    def log(self, txt):
+        dt=self.datas[0].datetime.date(0)
+        print('%s, %s' % (dt.isoformat(), txt))
 
     def logdata(self):
         txt = []
@@ -46,30 +59,46 @@ class SmaCross(bt.Strategy):
         txt.append('{:.2f}'.format(self.data.volume[0]))
         print(','.join(txt))
 
-    def __init__(self):
-        sma1 = bt.ind.SMA(period=self.p.pfast)  # fast moving average
-        sma2 = bt.ind.SMA(period=self.p.pslow)  # slow moving average
-        self.crossover = bt.ind.CrossOver(sma1, sma2)  # crossover signal
+    data_live = False
 
     def next(self):
         self.logdata()
-
-        if not self.position:  # not in the market
-            if self.crossover > 0:  # if fast crosses slow to the upside
-                self.buy()  # enter long
-
-        elif self.crossover < 0:  # in the market & cross to the downside
-            self.close()  # close long position
+        if self.data_live == False:
+            return
+        
+        #if not self.position: # check if you already have a position in the market
+        if (self.rsi < 30 and self.position.size < 100):
+            self.log('Buy Create, %.2f' % self.data.close[0])
+            self.buy(size=10) # buy when closing price today crosses above MA.
+        else:
+            # This means you are in a position, and hence you need to define exit strategy here.
+            if (self.rsi > 70 and self.position.size > -100):
+                self.log('Position Closed, %.2f' % self.data.close[0])
+                self.sell(size=10)
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
         if status == data.LIVE:
             self.data_live = True
 
+    def notify_order(self, order):
+        if order.status == order.Completed:
+            if order.isbuy():
+                self.log(
+                "Executed BUY (Price: %.2f, Value: %.2f, Commission %.2f)" %
+                (order.executed.price, order.executed.value, order.executed.comm))
+            else:
+                self.log(
+                "Executed SELL (Price: %.2f, Value: %.2f, Commission %.2f)" %
+                (order.executed.price, order.executed.value, order.executed.comm))
+                self.bar_executed = len(self)
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log("Order was canceled/margin/rejected")
+            self.order = None
+
 def run(args=None):
 
-    cerebro = bt.Cerebro(stdstats=False)
-    cerebro.addstrategy(SmaCross)
+    cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
         timeframe=bt.TimeFrame.Minutes,
@@ -81,13 +110,24 @@ def run(args=None):
         latethrough=False,  # let late samples through
         tradename=None  # use a different asset as order target
     )
+
     data0 = store.getdata(dataname="AAPL-STK-SMART-USD", **stockkwargs)
-    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=1)
+    cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=15)
+
     stval = cerebro.broker.getvalue()
+
+    #cerebro.broker = store.getbroker()
+    stval = cerebro.broker.getvalue()
+
+    cerebro.addstrategy(StochRSI)
     cerebro.run()
+    cerebro.plot()
+    
     endval = cerebro.broker.getvalue()
+    
     print(stval)
     print(endval)
+    cerebro.plot()
 
 
 if __name__ == '__main__':

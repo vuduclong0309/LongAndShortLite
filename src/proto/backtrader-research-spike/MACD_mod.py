@@ -2,8 +2,7 @@
 # -*- coding: utf-8; py-indent-offset:4 -*-
 ###############################################################################
 #
-# Copyright (C) 2018 Daniel Rodriguez
-#
+# Copyright (C) 2022 Duc Long Vu
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -18,6 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: Backtrader
+        @Links: https://github.com/mementum/backtrader/blob/master/samples/macd-settings/macd-settings.py
+
+A complexed version of MACD bot pulled from original backtrader repo.
+Author modified datafeed it to work with IBKR data feed 
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 

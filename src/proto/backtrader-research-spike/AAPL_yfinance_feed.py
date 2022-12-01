@@ -1,3 +1,14 @@
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: ?
+
+This is an example of a backtest program that use yfinance datafeed for longer period of backtesting 
+(as IBKR data feed history storage is not that long)
+
+I believe I inherited this code from someone else. I will credit properly once I'm able to retrace
+"""
+
 import backtrader as bt
 import yfinance as yf
 
