@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset:4 -*-
+# -*- coding: utf-8 -*-
+
 ###############################################################################
 #
-# Copyright (C) 2018 Daniel Rodriguez
+# Copyright (C) 2022 Duc Long Vu
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+
+This module is demonstrate one fully functioning bot that can buy / sell option, which is in backtesting phase
+
+We create a simple strategy based on RSI (https://www.investopedia.com/terms/r/rsi.asp)
+
+This bot create buy when RSI is low and sell when RSI is high
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -28,7 +40,7 @@ import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
 
-class StochRSI(bt.Strategy):
+class RSICall(bt.Strategy):
 
     def __init__(self):
         self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
@@ -59,12 +71,12 @@ class StochRSI(bt.Strategy):
         #if not self.position: # check if you already have a position in the market
         if (self.rsi < 30 and self.position.size < 100):
             self.log('Buy Create, %.2f' % self.datas[1].close[0])
-            self.buy(data="d1", size=1) # buy when closing price today crosses above MA.
+            self.buy(data="call", size=1) # buy when closing price today crosses above MA.
         else:
             # This means you are in a position, and hence you need to define exit strategy here.
             if (self.rsi > 70 and self.position.size > -100):
                 self.log('Position Closed, %.2f' % self.datas[1].close[0])
-                self.sell(data="d1", size=1)
+                self.sell(data="call", size=1)
 
     def notify_data(self, data, status, *args, **kwargs):
         print('*' * 5, 'DATA NOTIF:', data._getstatusname(status), *args)
@@ -87,7 +99,6 @@ class StochRSI(bt.Strategy):
             self.order = None
 
 def run(args=None):
-
     cerebro = bt.Cerebro()
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(
@@ -101,16 +112,16 @@ def run(args=None):
         tradename=None  # use a different asset as order target
     )
     data0 = store.getdata(dataname="SPY-STK-SMART-USD", **stockkwargs)
-    data1 = store.getdata(dataname="SPY-20221014-SMART-USD-366-PUT", **stockkwargs)
-    cerebro.adddata(data0, name='d0')
-    cerebro.adddata(data1, name='d1')
+    data1 = store.getdata(dataname="SPY-20221201-SMART-USD-366-CALL", **stockkwargs)
+    cerebro.adddata(data0, name='underlying')
+    cerebro.adddata(data1, name='call')
     #cerebro.resampledata(data0, timeframe=bt.TimeFrame.Minutes, compression=3)
     stval = cerebro.broker.getvalue()
 
     #cerebro.broker = store.getbroker()
     stval = cerebro.broker.getvalue()
 
-    cerebro.addstrategy(StochRSI)
+    cerebro.addstrategy(RSICall)
     cerebro.run()
 
     endval = cerebro.broker.getvalue()

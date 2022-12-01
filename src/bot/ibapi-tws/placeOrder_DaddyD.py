@@ -16,7 +16,7 @@ ct_size = 1
 dte = {
     "SPX": 0,
     "SPY": 2,
-    "TSLA": 0,
+    "TSLA": 1,
     "AAPL": 0
     }
 

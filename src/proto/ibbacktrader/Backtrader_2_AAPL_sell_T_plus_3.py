@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset:4 -*-
+# -*- coding: utf-8 -*-
+
 ###############################################################################
 #
-# Copyright (C) 2018 Daniel Rodriguez
+# Copyright (C) 2022 Duc Long Vu
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: Backtrader
+        @Links: https://www.backtrader.com/docu
+
+This module is an example the most basic example of a Backtrader Bot based on the introduction page, 
+using InteractiveBroker as the data source to print close price of selected security (SPY)
+and then plot the historical price.
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -78,7 +90,7 @@ class St(bt.Strategy):
 
 def run(args=None):
 
-    cerebro = bt.Cerebro(stdstats=False)
+    cerebro = bt.Cerebro()
     cerebro.addstrategy(St)
     store = bt.stores.IBStore(port=7497)
     stockkwargs = dict(

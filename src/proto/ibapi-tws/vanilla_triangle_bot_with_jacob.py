@@ -1,3 +1,44 @@
+# -*- coding: utf-8 -*-
+
+###############################################################################
+#
+# Copyright (C) 2022 Duc Long Vu
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+        @Credit: Jacob Amaral
+        @Links: https://www.youtube.com/watch?v=XKbk8SY9LD0
+
+This module demonstrates an example of a trading bot using Interactive Broker,
+by going through Jacob Amaral's Youtube, for reference please access the video link reference above
+
+Before running this bot, please go through documentation guide: "TWS Environment Setup"
+
+This code is standalone, an example of running this bot through terminal
+        $ python vanilla_triangle_bot_with_jacob.py    
+
+This bot connects to default InteractiveBroker's TraderWorkstation paper account port 7497
+You can switch to 7496 in the following code to use in real trading AT YOUR OWN RISK. 
+        self.ib.connect("127.0.0.1", 7497,1)
+
+The author only used this to get the hang of TWS API
+"""
 #Imports
 import ibapi
 from ibapi.client import EClient
@@ -12,32 +53,39 @@ import math
 from datetime import datetime, timedelta
 import threading
 import time
-#Vars
+
+# Vars
 orderId = 1
-#Class for Interactive Brokers Connection
+
+# Interactive Brokers Client / Wrapper, please refer to TWS API documentation quick start if you are new
 class IBApi(EWrapper,EClient):
     def __init__(self):
         EClient.__init__(self, self)
-    # Historical Backtest Data
+
+    # Called when a historical data instance is passed
     def historicalData(self, reqId, bar):
         try:
             bot.on_bar_update(reqId,bar,False)
         except Exception as e:
             print(e)
-    # On Realtime Bar after historical data finishes
+
+    # Called on the last historical data bar, before changed to real time bar
+    def historicalDataEnd(self, reqId, start, end):
+        print(reqId)
+
+    # Called when there is any change to historical data
     def historicalDataUpdate(self, reqId, bar):
         try:
             bot.on_bar_update(reqId,bar,True)
         except Exception as e:
             print(e)
-    # On Historical Data End
-    def historicalDataEnd(self, reqId, start, end):
-        print(reqId)
-    # Get next order id we can use
+
+    # Get next valid orderId for order creation
     def nextValidId(self, nextorderId):
         global orderId
         orderId = nextorderId
-    # Listen for realtime bars
+
+    # Called when a new data instance get passed
     def realtimeBar(self, reqId, time, open_, high, low, close,volume, wap, count):
         super().realtimeBar(reqId, time, open_, high, low, close, volume, wap, count)
         try:
@@ -47,7 +95,8 @@ class IBApi(EWrapper,EClient):
     def error(self, id, errorCode, errorMsg):
         print(errorCode)
         print(errorMsg)
-#Bar Object
+
+# Represent 1 OHLC candlestick bar
 class Bar:
     open = 0
     low = 0
@@ -62,7 +111,7 @@ class Bar:
         self.close = 0
         self.volume = 0
         self.date = datetime.now()
-#Bot Logic
+
 class Bot:
     ib = None
     barsize = 1
@@ -73,6 +122,7 @@ class Bot:
     smaPeriod = 50
     symbol = ""
     initialbartime = datetime.now().astimezone(pytz.timezone("America/New_York"))
+
     def __init__(self):
         #Connect to IB on init
         self.ib = IBApi()
@@ -100,12 +150,9 @@ class Bot:
         #self.ib.reqRealTimeBars(0, contract, 5, "TRADES", 1, [])
         self.ib.reqHistoricalData(self.reqId,contract,"","2 D",str(self.barsize)+mintext,"TRADES",1,1,True,[])
         print("ok")
-        
-
     #Listen to socket in seperate thread
     def run_loop(self):
         self.ib.run()
-        print("ok2")
     #Bracet Order Setup
     def bracketOrder(self, parentOrderId, action, quantity, profitTarget, stopLoss):
         #Initial Entry
@@ -147,6 +194,7 @@ class Bot:
     def on_bar_update(self, reqId, bar,realtime):
         print(bar)
         global orderId
+        print(orderId)
         #Historical Data to catch up
         if (realtime == False):
             self.bars.append(bar)
@@ -158,7 +206,39 @@ class Bot:
             #On Bar Close
             if (minutes_diff > 0 and math.floor(minutes_diff) % self.barsize == 0):
                 self.initialbartime = bartime
-                
+                #Entry - If we have a higher high, a higher low and we cross the 50 SMA Buy
+                #1.) SMA
+                closes = []
+                for bar in self.bars:
+                    closes.append(bar.close)
+                self.close_array = pd.Series(np.asarray(closes))
+                self.sma = ta.trend.sma(self.close_array,self.smaPeriod,True)
+                print("SMA : " + str(self.sma[len(self.sma)-1]))
+                #2.) Calculate Higher Highs and Lows
+                lastLow = self.bars[len(self.bars)-1].low
+                lastHigh = self.bars[len(self.bars)-1].high
+                lastClose = self.bars[len(self.bars)-1].close
+
+                # Check Criteria
+                if (bar.close > lastHigh
+                    and self.currentBar.low > lastLow
+                    and bar.close > str(self.sma[len(self.sma)-1])
+                    and lastClose < str(self.sma[len(self.sma)-2])):
+                    #Bracket Order 2% Profit Target 1% Stop Loss
+                    profitTarget = bar.close*1.02
+                    stopLoss = bar.close*0.99
+                    quantity = 1
+                    bracket = self.bracketOrder(orderId,"BUY",quantity, profitTarget, stopLoss)
+                    contract = Contract()
+                    contract.symbol = self.symbol.upper()
+                    contract.secType = "STK"
+                    contract.exchange = "SMART"
+                    contract.currency = "USD"
+                    #Place Bracket Order
+                    for o in bracket:
+                        o.ocaGroup = "OCA_"+str(orderId)
+                        self.ib.placeOrder(o.orderId,contract,o)
+                    orderId += 3
                 #Bar closed append
                 self.currentBar.close = bar.close
                 print("New bar!")
@@ -172,24 +252,6 @@ class Bot:
             self.currentBar.high = bar.high
         if (self.currentBar.low == 0 or bar.low < self.currentBar.low):
             self.currentBar.low = bar.low
-    
-    def purchase(self):
-            
-        #Bracket Order 2% Profit Target 1% Stop Loss
-        profitTarget = bars[-1].close*1.02
-        stopLoss = bars[-1].close*0.99
-        quantity = 1
-        bracket = self.bracketOrder(orderId,"BUY",quantity, profitTarget, stopLoss)
-        contract = Contract()
-        contract.symbol = self.symbol.upper()
-        contract.secType = "STK"
-        contract.exchange = "SMART"
-        contract.currency = "USD"
-        #Place Bracket Order
-        for o in bracket:
-            o.ocaGroup = "OCA_"+str(orderId)
-            self.ib.placeOrder(o.orderId,contract,o)
-        orderId += 3
 
 #Start Bot
 bot = Bot()

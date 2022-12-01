@@ -1,3 +1,12 @@
+"""
+        @Credit: Backtrader
+        @Links: https://github.com/mementum/backtrader/blob/master/samples/
+
+Author Note:
+This module is vanilla example to create a bot that work with multiple datafeed.
+I stored this in prototype folder since this is the skeleton code that I used for my real trading bot
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
