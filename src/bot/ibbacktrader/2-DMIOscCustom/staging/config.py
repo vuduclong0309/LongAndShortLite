@@ -2,13 +2,14 @@ import backtrader as bt
 import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
+backtest_glob = False
+
 #IBKR Client parameters
 port_conf=7497
 p_factor = 100  # IBKR simul broker has option price *100, thus need to divide by 100 to make price back to normal
 use_rt_bar = True
 
 # Trade parameters
-backtest_glob = False
 symbol_glob = "SPY"
 dtestep_glob = 0
 trade_timeframe_type = bt.TimeFrame.Seconds

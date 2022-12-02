@@ -2,26 +2,31 @@ import backtrader as bt
 import backtrader.indicators as btind
 import backtrader.feeds as btfeeds
 
+backtest_glob = True
+
 #IBKR Client parameters
 port_conf=7497
 p_factor = 1  # IBKR simul broker has option price *100, thus need to divide by 100 to make price back to normal
-use_rt_bar = True
+use_rt_bar = False
 
 # Trade parameters
-backtest_glob = True
 symbol_glob = "SPY"
 trade_timeframe_type = bt.TimeFrame.Minutes
-trade_timeframe_compress = 3
+trade_timeframe_compress = 1
 
-price_ceiling = 10.0
+# If option price go out of (price_floor, price_ceiling) range, recalibrate strike price as we assume price action has deviated from at the money
+price_ceiling = 10
+price_floor = 1
 
 rsi_low = 30
 rsi_high = 70
-safe_padding = 2
+safe_padding = 0
 
-sl_limit = 0.9
-tp_floor = 1.1
+# Hard stop loss / take profit & amount of contract for each trade
+sl_limit = 0.8
+tp_floor = 1.2
 ct_size = 1
 
+  
 
   

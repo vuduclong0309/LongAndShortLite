@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset:4 -*-
+# -*- coding: utf-8 -*-
+
 ###############################################################################
 #
-# Copyright (C) 2018 Daniel Rodriguez
+# Copyright (C) 2022 Duc Long Vu
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,44 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+
+TODO: refactor those horrendous variable name choices (Yep, I'm aware of that, please pardon me, I tried my best)
+
+DISCLAIMER: THIS BOT IS ONLY FOR DEMONSTRATION, DON'T RUN IT IN PROD FOLDER (REAL TIME TRADING) IF YOU ARE NOT SURE
+
+This RSI bot strategy is the first bot that I have ever run in real market during Oct 2022.
+
+I included this bot only for demonstration purpose that we can develop sophisticated strategy using this framework.
+Due to this reason, I will not include comment for the bot, unless this is critical (at least not in this lite version), but you are free to study this bot
+
+I would only warn that RSI strategy is not as reliable in trending market.
+
+You can move this file to any other folder (dev / staging / prod) to run in different environment:
+    dev: backtesting strategy on historical data in test client
+    staging: test run strategy real time in test client
+    prod: real time trading (again, please read the disclaimer)
+
+I find this set up is the most efficient at hotfixing and patching real time bug at the cost of duplicated file (Please refer to EnvironmentSetup.md explanation)
+
+I will definitely use alternative approach in corporation enviroment.
+
+To run this file, please simply run the associated bash script in the folder
+
+It's a sophisticated variation of RSI indicator, with the following additional rules:
+
+1. Instead of buying / selling underlying, we leverage by buying 4-5 dte at the money CALL / PUT option
+    1.5 When the price of underlying stock move too far away, recalibrate STRIKE price
+2. Doesn't trade within 30 minute of opening and closing (refer to start_time & close_time) as I assume this period to be volatile
+3. Stop loss & take profit level as determined in config
+4. If stop loss is hit, we wait until there is a trend reversal (oversold -> overbuy, and vice versa) before continuing
+5. Instead of buying order when there is a cross signal, wait until there is a reversion.
+"""
+
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -45,7 +83,7 @@ def updateGlobalVar(symbol):
     global strike_glob
     stock = yf.Ticker(symbol)
     latest_price = stock.history(period='0d', interval='1m')['Close'][-1]
-    basetime = stock.options[2].replace('-', '') # get 3-5dte date
+    basetime = stock.options[4].replace('-', '') # get 3-5dte date
 
     expdate_glob = basetime
     strike_glob = int(latest_price)
@@ -90,10 +128,6 @@ class RSIPut(StrategyWithLogging):
                 self.eod_flush_position()
                 return
 
-        #print ('put ' + str(self.getpositionbyname('put').size) + ' call ' + str(self.getpositionbyname('call').size))
-        #print (self.getpositionbyname('put').size <= 0 and self.getpositionbyname('call').size <= 0)
-        #print (self.have_position())
-
         if (last_close > price_ceiling or last_close < price_floor) and not self.have_position() and backtest_glob == False:
             print("Price trade deviated, exiting and recalibrate")
             self.cerebro.runstop()
@@ -118,7 +152,7 @@ class RSIPut(StrategyWithLogging):
                 if stop_loss_wait_reversal == -1:
                     print("Hostile Condition, waiting until neutral")
                 else:
-                    self.order = self.buy(data='put', size=ct_size) # buy when closing price today crosses above MA.
+                    self.order = self.buy(data='put', size=ct_size) 
         else:
             if ((self.rsi_arr[-1]< rsi_low + safe_padding or self.rsi_arr[-2] < rsi_low + safe_padding) and self.rsi_arr[-1]> self.rsi_arr[-2]):
                 print("Close Put on RSI")
@@ -190,7 +224,7 @@ class RSICall(StrategyWithLogging):
                 if stop_loss_wait_reversal == 1:
                     print("Hostile Condition, waiting until neutral")
                 else:
-                    self.order = self.buy(data='call', size=ct_size) # buy when closing price today crosses above MA.
+                    self.order = self.buy(data='call', size=ct_size) 
         else:
 
             if ((self.rsi_arr[-1]> rsi_high - safe_padding or self.rsi_arr[-2] > rsi_high - safe_padding) and self.rsi_arr[-1]< self.rsi_arr[-2]):

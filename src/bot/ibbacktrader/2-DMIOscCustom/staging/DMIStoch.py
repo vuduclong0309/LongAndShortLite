@@ -1,13 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset:4 -*-
+# -*- coding: utf-8 -*-
+
 ###############################################################################
 #
-# Copyright (C) 2018 Daniel Rodriguez
+# Copyright (C) 2022 Duc Long Vu
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either vedmion 3 of the License, or
-# (at your option) any later vedmion.
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,6 +18,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+"""
+        @Author: vuduclong0309
+        @Date: 2022-Nov-30
+
+A quick demonstration with a custom built indicator in action (paper account trading)
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -39,11 +46,6 @@ strike_glob = ""
 stop_loss_wait_reversal = 0
 
 eod = False
-
-def symToYF(symbol):
-    if symbol == "SPX":
-        return "^SPX"
-    return symbol
 
 def updateGlobalVar(symbol, dtestep):
     global expdate_glob
@@ -248,34 +250,14 @@ def run(args=None):
         qcheck=0.5,  # timeout in seconds (float) to check for events
         preload=False,
         live=False,
-
-        #fromdate=datetime.datetime(2021, 9, 24),  # get data from..
-        #todate=datetime.datetime(2022, 9, 25),  # get data from..
         latethrough=False,  # let late samples through
     )
 
-    #datafeeds = [
-    #    #('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-    #    ('stock'    , "SPY-STK-SMART-USD", "SPY-STK-SMART-USD"                                                                 ),
-    #    ('call'     , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
-    #    ('put'      , "SPY-STK-SMART-USD", "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
-    #    #('call'      , "SPX-20221123-SMART-USD-4000-CALL"),
-    #    #('put'       , "SPX-20221123-SMART-USD-4000-PUT"),
-    #]
-
-    #for alias, full_sec_name, trade_name in datafeeds:
-    #    data = store.getdata(dataname = full_sec_name, tradename = trade_name, **stockkwargs)
-    #    print(full_sec_name)
-    #    cerebro.resampledata(data, timeframe = bt.TimeFrame.Seconds, compression=5)
-    #    cerebro.adddata(data, name=alias)
-
     datafeeds = [
-        #('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
-        ('stock'    , "SPY-STK-SMART-USD"                                                                 ),
-        ('call'     , "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
+        ('stock'    , "%s-STK-SMART-USD"            % symbol_glob                                       ),
+        ('call'     , "%s-%s-SMART-USD-%s-CALL"      % (symbol_glob, expdate_glob, str(strike_glob))    ),
         ('put'      , "%s-%s-SMART-USD-%s-PUT"      % (symbol_glob, expdate_glob, str(strike_glob))     ),
-        #('call'      , "SPX-20221123-SMART-USD-4000-CALL"),
-        #('put'       , "SPX-20221123-SMART-USD-4000-PUT"),
+
     ]
 
 
