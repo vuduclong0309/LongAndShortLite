@@ -39,7 +39,8 @@ You can move this file to any other folder (dev / staging / prod) to run in diff
     staging: test run strategy real time in test client
     prod: real time trading (again, please read the disclaimer)
 
-I find this set up is the most efficient at hotfixing and patching real time bug at the cost of duplicated file (Please refer to EnvironmentSetup.md explanation)
+I'm more aware that I can use other approach on setting up config (e.g set up --conf flag). However, I find it user-friendly and most practical, 
+having able to access and edit 3 environment at the same time, at the cost of somewhat duplicated code.
 
 I will definitely use alternative approach in corporation enviroment.
 
