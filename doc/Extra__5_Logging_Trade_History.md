@@ -20,7 +20,7 @@ Credit to tradejanis.com
 
 [Excel Sheet](https://drive.google.com/file/d/1-IiMFcAmplPqgmA0W-w2hygjzrvlbnJB/view?usp=sharing)
 
-![example](https://raw.githubusercontent.com/vuduclong0309/LongAndShort/main/img/5_Journal_Example.png)
+![example](https://raw.githubusercontent.com/vuduclong0309/LongAndShortLite/main/img/5_Journal_Example.png)
 
 2. Yearly Log (Technically I didn't have a chance to do this as it's only 3 months)
 

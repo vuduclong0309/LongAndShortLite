@@ -18,7 +18,7 @@ https://docs.github.com/en/get-started/quickstart/set-up-git
 
 When things are done, you can test this by cloning this repo to your computer:
 
-```git clone https://github.com/vuduclong0309/LongAndShort.git ```
+```git clone https://github.com/vuduclong0309/LongAndShortLite.git ```
 
 ## Python
 And here's a guide for installing Python:
@@ -44,7 +44,7 @@ I managed to fix it on [my own fork](https://github.com/vuduclong0309/backtrader
 
 Hence I recommend the first command.
 
-Once you're done, you can check by running the code at [/src/proto/AAPL_yfinance_feed.py](https://github.com/vuduclong0309/LongAndShort/blob/main/src/proto/AAPL_yfinance_feed.py) to test the program
+Once you're done, you can check by running the code at [/src/proto/AAPL_yfinance_feed.py](https://github.com/vuduclong0309/LongAndShortLite/blob/main/src/proto/AAPL_yfinance_feed.py) to test the program
 (doesn't need TradeWorkerStation)
 
 If you encounter problem related to yfinance module not found, run this:
@@ -78,7 +78,7 @@ After TWS installed, you would need to config TWS API in the program to send dat
 Here's a video guide by Jacob Amaral https://youtu.be/XKbk8SY9LD0?t=576
 
 You could actually to continue follow his guide (4 videos total) to build a bot using vanilla AWS API
-The final program following his guide is available in this repo, and mentioned later in [Extra__6_SemiBot_Using_TWS_API.md](https://github.com/vuduclong0309/LongAndShort/blob/main/doc/Extra__6_SemiBot_Using_TWS_API.md)
+The final program following his guide is available in this repo, and mentioned later in [Extra__6_SemiBot_Using_TWS_API.md](https://github.com/vuduclong0309/LongAndShortLite/blob/main/doc/Extra__6_SemiBot_Using_TWS_API.md)
 
 ## Jupyter Notebook (Skippable)
 This is my go to IDLE of choice when it come to function testing during development.

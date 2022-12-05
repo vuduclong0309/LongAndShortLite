@@ -58,13 +58,13 @@ At the moment, my full LongNShort consists of (but not limited to) these compone
   - I stripped the idea down to the core, which only consist of:
     - A Kanban Board
     - Epic, Task and Bug ticket type
-![JiraPreview](https://github.com/vuduclong0309/LongAndShort/blob/main/img/RM_2_JIRA_preview.png?raw=true)
+![JiraPreview](https://github.com/vuduclong0309/LongAndShortLite/blob/main/img/RM_2_JIRA_preview.png?raw=true)
 
 - Atlassian Confluence trader knowledge archive, where I store
   - Day by day live trading journal
   - Bugfix record and experience
   - SPIKE Research documentation
-![JiraPreview](https://raw.githubusercontent.com/vuduclong0309/LongAndShort/main/img/RM_1_Confluence_Review.png)
+![JiraPreview](https://raw.githubusercontent.com/vuduclong0309/LongAndShortLite/main/img/RM_1_Confluence_Review.png)
 
 Both of these two components I wish to maintain as my private property at the moment, 
 but I would happy to demo it should it is appropriate at the later time. I only mention this as a suggestion

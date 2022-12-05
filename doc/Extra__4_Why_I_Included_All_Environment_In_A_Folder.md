@@ -11,14 +11,14 @@ This is a good git article about this topic https://www.gitkraken.com/learn/git/
 
 Key learning:
 ```
-The main idea behind the Git flow branching strategy is to isolate your work into different types of branches. There are five different branch types in total:
+The main idea behind theï¿½Git flow branching strategyï¿½is to isolate your work into different types of branches. There are five different branch types in total:
     Main
     Develop
     Feature
     Release
     Hotfix
 
-The two primary branches in Git flow are main and develop. There are three types of supporting branches with different intended purposes: feature, release, and hotfix.
+The two primary branches in Git flow areï¿½mainï¿½andï¿½develop. There are three types of supporting branches with different intended purposes:ï¿½feature,ï¿½release, andï¿½hotfix.
 
 The Benefits of Git Flow:
     1. The various types of branches make it easy and intuitive to organize your work.
@@ -77,7 +77,7 @@ In this particular context, I would largely favor the approach to put all enviro
 until I get a better solution. 
 
 You can find an actual example of me fixing a bug with my semibot (src/bot/ibapi-tws/placeAtmOption[__stg].py)
-![Incident](https://raw.githubusercontent.com/vuduclong0309/LongAndShort/main/img/4_Staging_And_Prod_hotfix.png)
+![Incident](https://raw.githubusercontent.com/vuduclong0309/LongAndShortLite/main/img/4_Staging_And_Prod_hotfix.png)
 
 So in short, there is a problem with putting my PUT order (but not CALL order). 
 
