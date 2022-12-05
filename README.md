@@ -2,41 +2,52 @@
 
 --- 
 ## Overview
-This repo were the coding aspect of my first few months auto-trading bot project LongNShort, 
-repurposed into a starter kit into algotrading for engineering colleagues with similar interest,
-by adding suggestion on extra reading and brief guide on each steps. 
+This repo were the coding aspect of my first few months into the auto-trading bot project LongNShort, 
+repurposed into an introduction to technical algotrading, targeted engineering colleagues with similar interest.
 
-My aim for this repo is to be a (not-so)short step-by-step guide to get the absolute basic technical trading concept, and to build
+In other word, I want to serve this as a (not-so)short step-by-step guide build
 a medium frequency automated option trading bot (5 second timeframe+) from scratch with Backtrader 
-and InteractiveBroker. I trust this is much better than reading full API documentation and trading books
+and InteractiveBroker. A partial archive of what I have found and learn from August 2022 until Dec 2022
 (I also included my first trading bot in this repo :D).
 
-While technically everyone can use this bot (you can literally run a command line to fire the bot), 
-I believe:
-* The skill to read API documentation will help much along the way
-* You should create or modify my bot before you do real time trading.
-
-You can head towards doc folder and read 0_Before_You_Begin.md to begin the journey. 
+If you want a quick start, you can head towards doc folder and read 0_Before_You_Begin.md to begin the journey. 
 
 The rest of documenation provides:
 * A glimpse of my full LongNShort project
 * A high-level overview of this repo structure
 * Credits to predecessor that enabled me to walk on this project.
 
-## Higher Overview (LongNShortFull)
-Even though my main job since I have graduated from NTU Singapore in 2019 was a data engineer, 
-I always have a special interest in finance and trading, which influenced my decision a parttime master 
-course in financial engineering in Oct 2020.
+## LongNShortFull
 
-Nonetheless, there was always a rift between theoretical and practical. 
-Having dissatisfied with my investment result over the last 3 years,
-In July 2022, I made a brave jump out of my comfort zone to fully focus on my wet dream,
-which were to become a trader for living, an experiment and a huge gamble to see if
-I really have a knack for it.
+### Why I did this?
+Beside an obvious interest in computer science and data analytics, I have always had a keen interest in trading.
+I grew up selling (secretly) Yu-gi-oh magic card in my middle schoole and then Dota 2 ingame item in my university.
+Even though I have graduated in NTU as a computer science student in 2019, with the emergence of algotrading, I happily took 
+a parttime master in Financial Engineering in Oct 2020.
 
-Having learnt from two different group of people who have different characteristic:
-- In Shopee, most of engineering colleague have superb coding standard, but usually have limited financial knowledge beyond investing.
-- In WorldQuant University, most of my teammate so far come from analytical background with profound knowledge in trading and hedging experience, 
+While I'm still grateful for an opportunity to work as a data engineer in Shopee, in middle of 2022,
+feeling the time is right, I took a brave crazy leap. My last day in Shopee was also the day I commemorate
+working for 3 full years (and 1 day :>), the only job I have after graduation.
+
+One of my main motivation is that I was unhappy with my self-investment result in 2020-2021. Thus, 
+I want to commit full-time into trading without even knowing if I can make it or not, only with a little 
+fortune I have saved over last 3 years.
+
+It's still funny to this day that I did the stuff in the most crazy market period. This is like jumping off a cliff.
+However, I know that I wouldn't do such reckless move if I'm in my 30s. I want to take a chance while I still can
+afford to do it while I'm still 25, young and dumb, but wise enough to know about damage control.
+
+On the bright side, may the grow explode exponentially in the hardest time. I know that if 
+I'm stalling for perfect day then I would never do it. 
+
+So now I'm writing this guide (actually I consider this guide as a method of self-emotion control)
+to have a recap of the path that I have walked, and maybe to help anyone who will need a guide later.
+
+### How I'm doing this?
+When I look from different perspectives: as a data engineer and as a financial engineering student, I see different
+problems to each group of people:
+- In Shopee, most of my colleague have strong technical background, but usually have limited financial knowledge beyond investing.
+- In WorldQuant University, my teammate often have profound knowledge in trading and hedging experience, 
 but face obstacle when it come to coding.
 
 LongNShort is my attempt at combining these experience to create a trading project that can utilize both advanced trading concept
@@ -47,19 +58,22 @@ At the moment, my full LongNShort consists of (but not limited to) these compone
   - I stripped the idea down to the core, which only consist of:
     - A Kanban Board
     - Epic, Task and Bug ticket type
-    - Sprint shortened to a week as opposed to 2 week
+![JiraPreview](https://github.com/vuduclong0309/LongAndShort/blob/main/img/RM_2_JIRA_preview.png?raw=true)
+
 - Atlassian Confluence trader knowledge archive, where I store
   - Day by day live trading journal
   - Bugfix record and experience
-  - AGILE SPIKE research documentation
-Both of these two components I wish to maintain as my private property at the moment, 
-but I would happy to demo it should it is appropriate at the later time, but I can recommend Atlassian
-should you ever need to track your progress
+  - SPIKE Research documentation
+![JiraPreview](https://raw.githubusercontent.com/vuduclong0309/LongAndShort/main/img/RM_1_Confluence_Review.png)
 
-- The coding repo, which include the coding aspects of the project (which should be closely similar to this)
+Both of these two components I wish to maintain as my private property at the moment, 
+but I would happy to demo it should it is appropriate at the later time. I only mention this as a suggestion
+if you need a team managed software. I worked with this in Shopee for 3 years so I'm comfortable with that.
+
+- The coding repo, which include the coding aspects of the project
   - I mostly use Python to run this project, with only some minor bash script to run it in Azure server
     - The two major framework I use would be IBKR TWS API and Backtrader
-  - I will include any critical documentation describing the project in Confluence into the doc folder of this public repo :)
+  - I will try include any critical documentation from the other repo into this Lite version as much as possible
     
 ## This Repo Folder Structure
 
