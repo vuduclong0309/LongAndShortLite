@@ -7,6 +7,7 @@ This documents is a brief guide on how to install all prerequisite to run this p
 * Python 3
 * Backtrader (Disclaimer: please use my forked repo, for IBKR related bug fix)
 * IBKR TradeWorkerStation
+(Optional) JupyterNotebook, for guys who like code
 
 ## Git
 Just in case if you are using Github Desktop or similar case, 
@@ -69,3 +70,11 @@ Here's a video guide by Jacob Amaral https://youtu.be/XKbk8SY9LD0?t=576
 If you are interested, you could actually follow his guide (4 videos total) to build a bot using vanilla AWS API
 The final program following his guide is available in this repo, under /src/proto/ibapi-tws/vanilla_triangle_bot_with_jacob.py
 
+## Jupyter Notebook (Skippable)
+This is my go to IDLE of choice when it come to function testing during development.
+Alternatively you can use vanilla IDLE / PyCharm / Visual Studio (I actually use Visual Studio but the debug experience is not so cool)
+
+You can find the installation guide for Jupyter here
+```https://jupyter.org/install```
+
+I also included an example of my notebook at src/proto/jupytersandbox, feel free to use :)
