@@ -24,7 +24,7 @@ to balance the aspects. With all things considered, here how I would write the g
 * The guide would be splitted into multiple file, labelled numerically as the order that you should read
 	*	This guide is number 0, so next step you should read guide 1
 
-* The guide would be "dummies" style, with reference to extra research
+* The guide would be "dummies" style, as short as I can permit without neglecting critical point, with reference to extra research for who want detailed information
 	*	I would often point to references, with a very brief summary of critical point that I learned from it
 	*	A few guide / portion I would listed as skippable, but you should only skip it if you don't understand
 		* Later on, when you have more knowledge from research of your own or maybe hitting understanding roadblock, reread the skipped part
