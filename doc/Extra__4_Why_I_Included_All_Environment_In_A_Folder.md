@@ -2,21 +2,23 @@
 
 --- 
 ## Overview
-If I was myself a year ago I would have hated myself with passion when I look at my branch setup, but not today...
-This article discuss about good Git branch practices and explain my reasoning on why I keep all environment in 1 folder
+If I was myself a year ago I would have hated myself with passion when I look at this repo...
+
+This article discuss about good Git branch practices and explain my reasoning on why I stopped hating it
 
 ## Example of a good Git branch practice
 This is a good git article about this topic https://www.gitkraken.com/learn/git/best-practices/git-branch-strategy
+
 Key learning:
 ```
-The main idea behind the Git flow branching strategy is to isolate your work into different types of branches. There are five different branch types in total:
+The main idea behind theï¿½Git flow branching strategyï¿½is to isolate your work into different types of branches. There are five different branch types in total:
     Main
     Develop
     Feature
     Release
     Hotfix
 
-The two primary branches in Git flow are main and develop. There are three types of supporting branches with different intended purposes: feature, release, and hotfix.
+The two primary branches in Git flow areï¿½mainï¿½andï¿½develop. There are three types of supporting branches with different intended purposes:ï¿½feature,ï¿½release, andï¿½hotfix.
 
 The Benefits of Git Flow:
     1. The various types of branches make it easy and intuitive to organize your work.
@@ -29,8 +31,11 @@ The Challenges of Git Flow:
 ```
 
 Back in my Shopee day we also used variant of Git flow with the same idea. (master / feature / hotfix / dev / staging)
-Moreover, normally I would advise to practice this, however, now I will explain 
+Moreover, normally I would advise to practice this, however, due to "personal reason" I reduced to this:
 
+- Put all dev / staging / prod in sub folder
+- Only maintain main & feature branch. 
+  - Simply: main -> branch out a feature branch -> test all the stuff -> merge back to main one you are done
 
 
 ## Why I have been adopting this all-environment in one approach
@@ -43,17 +48,17 @@ During the last few months I learnt that:
 * Even a small mistake left for small duration can cost it dearly
 
 This aspects is personal, but one of my worst nightmare is Git conflict.
-While if we execute flawless this wouldn't happens, but when this happens it is one 
-of the common root cause for code inconsistency (e.g resolve as our then their, and delete few line of code etc..)
-So one must to do it carefully to resolve every Git conflict.
 
-However, things are not that easy when one are in time-pressure, not even mentioning the fear of
-losing money second by second.
+While if we maintain the code this wouldn't happens, when this happens it is one 
+of the common root cause for code inconsistency that can go worse exponentially. So utmost careful attitude is important.
+
+However, that utmost careful mental attitude is not easy to maintain when one are in time-pressure, 
+not even mentioning the fear of losing money second by second.
 
 Perhaps I'm not that good yet, but after a day of losing more than 1k because of this,
-I decided not to let this happen, not anymore for this project.
+I decided not to let this happen at all, prevention is better than cure.
 
-While that is the key factor, let's take an objective comparison of this approach vs the former one:
+While that explanation is kinda subjective, let's take an more objective comparison between this approach and Git Flow.
 
 ```
 Pros:
@@ -72,14 +77,14 @@ In this particular context, I would largely favor the approach to put all enviro
 until I get a better solution. 
 
 You can find an actual example of me fixing a bug with my semibot (src/bot/ibapi-tws/placeAtmOption[__stg].py)
+![Incident](https://raw.githubusercontent.com/vuduclong0309/LongAndShortLite/main/img/4_Staging_And_Prod_hotfix.png)
 
 So in short, there is a problem with putting my PUT order (but not CALL order). 
 
 In response, I freeze execution of PUT order in prod (right side) but still do CALL order,
 while hotfixing the problem in staging at the same time (left side)
 
-(objectively the best way if possible is to halt PROD completely, but that also mean an 
-opportunity I lost. I believe this is more or less subjective issue. Also sometimes one can't 
-just stop in corporate environment)
+(objectively the safest possible way is to halt PROD completely, but that also mean an 
+opportunity I lost (e.g that juicy CALL scalp). I believe this is more or less subjective issue.)
 
 So ... that some up my explanation for this choice
