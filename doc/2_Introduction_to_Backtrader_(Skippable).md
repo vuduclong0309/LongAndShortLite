@@ -1,4 +1,4 @@
-# Introduction_to_Backtrader_(Skippable)
+# Introduction to Backtrader (Skippable)
 
 --- 
 ## Overview
