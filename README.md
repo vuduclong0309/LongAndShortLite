@@ -84,4 +84,4 @@ During my learning my project, I was forturnated to meet these amazing predecess
 - [TradersAcademy](https://tradersacademy.online/) by InteractiveBroker
 - [mementum](https://github.com/mementum), for creating a commercial grade strategy backtest framework and released it for free 
   - Unfortunately it's not supported anymore. However, I am still maintaining a fork with IBKR focused bugfix until I find another alternative
-
+- [u/DaddyDersch](https://www.reddit.com/user/DaddyDersch/), for his series of helpful post regarding general trading advice. You may click the link to refer to his public profile 
