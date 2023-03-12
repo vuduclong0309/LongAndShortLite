@@ -59,5 +59,7 @@ Well.. technically you don't need this to try the project but just to be thoroug
 * You can learn about AGILE software development life cycle & Atlassian tools
 	* This is the principle I stick and used for my full LongNShort version
 
-
+## Extra: Technical Analysis book
+* As so you know, we would need a strategy to build the bot. Thus, I also have include a compilation
+* of Technical Analysis technique in the file 0_Technical_Analysis.pdf that I have collected from an unknown author during my expedition
 
