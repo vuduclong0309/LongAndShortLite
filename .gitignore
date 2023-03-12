@@ -134,3 +134,4 @@ dmypy.json
 .pyproj
 
 backtrader/
+/Backtrader_1_SPY_printClose.py
